@@ -126,7 +126,7 @@ export default {
           window.providerInfo = {
             'companyName': response.provider,
             'name': '我来自Main=>window.providerInfo,没有此字段',
-            'tel': response.tel,
+            'phone': response.tel,
             'address': '我来自Main=>window.providerInfo,没有此字段',
             'keywords': [
               {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
@@ -135,6 +135,7 @@ export default {
               {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
             ]
           }
+          console.log('main=>window.providerInfo', window.providerInfo)
         }
       })
     },
