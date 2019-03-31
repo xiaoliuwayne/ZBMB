@@ -6,6 +6,7 @@ import router from './router'
 import axios from './http'
 import VueLazyload from 'vue-lazyload'
 import 'vant/lib/index.css'
+import querystring from 'querystring'
 import {
   Button,
   Tab,
@@ -17,7 +18,13 @@ import {
   Radio,
   Area,
   Checkbox,
-  CheckboxGroup
+  CheckboxGroup,
+  Swipe,
+  SwipeItem,
+  Field,
+  AddressEdit,
+  Toast
+  // ImagePreview  // 图片预览
 } from 'vant'
 
 Vue.use(Button)
@@ -30,9 +37,13 @@ Vue.use(RadioGroup)
 Vue.use(Radio)
 Vue.use(Area)
 Vue.use(Checkbox).use(CheckboxGroup)
+Vue.use(Swipe).use(SwipeItem)
+Vue.use(Field)
+Vue.use(AddressEdit)
+Vue.use(Toast)
 
 Vue.config.productionTip = false
-
+Vue.prototype.qs = querystring
 // 将axios挂载到prototype上，在组件中可以直接使用this.axios访问
 Vue.prototype.axios = axios
 
