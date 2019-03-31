@@ -4,6 +4,7 @@
       title="物流状态"
       left-arrow
       @click-left="back"
+      class="main-bk header"
     />
     <div class="content">{{trackingContent}}</div>
   </div>
@@ -33,5 +34,5 @@ export default {
 </script>
 
 <style scoped>
-@import '../../assets/css/mycss.css';
+  @import '../../assets/css/mycss.css';
 </style>
