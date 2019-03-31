@@ -8,7 +8,7 @@
     />
     <p class="p-header">我的联系方式：</p>
     <van-field
-      v-model="comName"
+      v-model="companyName"
       type="text"
       label="公司名称："
       placeholder=""
@@ -75,7 +75,7 @@
         </van-checkbox>
       </van-checkbox-group>
     </div>
-    <van-button class="bt-bright bt-big">修改</van-button>
+    <van-button class="bt-bright bt-big" @click="update">修改</van-button>
   </div>
 </template>
 
@@ -100,10 +100,10 @@ export default {
       city: '',
       district: '',
       street: '',
-      comName: '',
+      companyName: '',
       name: '',
       phone: '',
-      addr: '',
+      address: '',
       allMajor: [],
       areaList: null,
       defaultData: {},
@@ -113,17 +113,56 @@ export default {
       zzList: [],
       szMajor: {}, // [{keyId: keyWord}..]
       zzMajor: {},
+      providerInfo: {},
       flag: false
       // flag: true
     }
   },
   created () {
+    var _ = require('lodash')
+    this.providerInfo = _.cloneDeep(window.providerInfo) // 深拷贝
     this.init()
-    this.defaultData = this.$route.query.defaultInfo
-    console.log('this.defaultData', this.defaultData)
-    this.setDefault(this.defaultData)
+    console.log('this.providerInfo', this.providerInfo)
+    this.setDefault(this.providerInfo)
   },
   methods: {
+    getKeyWords (keyIdList, groupId) {
+      let tmp = []
+      let inquiryId = 7
+      let selectMajor = {1: this.zzMajor, 2: this.szMajor}
+      if (keyIdList.length > 0) {
+        keyIdList.forEach(key => {
+          tmp.push({
+            'groupId': groupId,
+            'keyId': key,
+            'keyword': selectMajor[groupId][key],
+            'inquiryId': inquiryId
+          })
+        })
+        return tmp
+      }
+    },
+    update () {
+      // 更新当前的window.providerInfo信息
+      let zzObjList = this.getKeyWords(this.zzResult, 1)
+      let szObjList = this.getKeyWords(this.szResult, 2)
+      let keywords = zzObjList.concat(szObjList)
+      window.providerInfo = {
+        'companyName': this.companyName,
+        'name': this.name,
+        'phone': this.phone,
+        'address': this.province + this.city + this.district + this.street,
+        'keywords': keywords
+      }
+      alert('信息修改成功！')
+      // [
+      // {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
+      //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
+      //   {'groupId': 2, 'inquiryId': 7, 'keyId': 2006, 'keyword': '平布'},
+      //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
+      // ]
+      // post更新数据库中的供应商信息
+    },
     splitAddr (addr) {
       // 拆分地址,目前不适应自治区，特别行政区的划分
       if (addr) {
@@ -141,7 +180,7 @@ export default {
           this.setAddrCode()
         } catch (e) {
           console.log('e: ', e)
-          alert('该地址不是"省-市-区/县"格式地址!')
+          // alert('该地址不是"省-市-区/县"格式地址!')
         }
       }
     },
@@ -185,28 +224,38 @@ export default {
     //   this.addrCode = '440105'
     // },
     setDefault (data) {
-      this.comName = data.comName
+      this.companyName = data.companyName
       this.name = data.name
       this.phone = data.phone
-      this.addr = data.addr
-      this.splitAddr(this.addr)
-      let tmpMajor = data.major
+      this.address = data.address
+      this.splitAddr(this.address)
+      let tmpMajor = data.keywords
       tmpMajor.forEach(major => {
         if (major.groupId === 1) {
-          // 初始的zzResult
-          major.list.forEach(obj => {
-            this.zzResult.push(obj.keyId)
-          })
-          console.log('this.zzResult', this.zzResult)
+          this.zzResult.push(major.keyId)
         }
         if (major.groupId === 2) {
-          // 初始的zzResult
-          major.list.forEach(obj => {
-            this.szResult.push(obj.keyId)
-          })
-          console.log('this.szResult', this.szResult)
+          this.szResult.push(major.keyId)
         }
       })
+      console.log('this.zzResult', this.zzResult)
+      console.log('this.szResult', this.szResult)
+      // tmpMajor.forEach(major => {
+      //   if (major.groupId === 1) {
+      //     // 初始的zzResult
+      //     major.list.forEach(obj => {
+      //       this.zzResult.push(obj.keyId)
+      //     })
+      //     console.log('this.zzResult', this.zzResult)
+      //   }
+      //   if (major.groupId === 2) {
+      //     // 初始的zzResult
+      //     major.list.forEach(obj => {
+      //       this.szResult.push(obj.keyId)
+      //     })
+      //     console.log('this.szResult', this.szResult)
+      //   }
+      // })
     },
     getMajor () {
       // let url = 'http://ts.ebdaowei.com/ebuapi/show.do?cmd=fabricKeywords&groupId=0'
