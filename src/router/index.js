@@ -2,11 +2,13 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import HelloWorld from '@/components/HelloWorld'
 import Main from '../pages/Main.vue'
+import Index from '../pages/Index.vue'
 import OrdersList from '../pages/orders/OrdersList'
 import Requirement from '../pages/orders/Requirement'
 import Express from '../pages/orders/Express'
-import Sample from '../pages/orders/Sample'
+import Customer from '../pages/orders/Customer'
 import Modify from '../pages/orders/Modify'
+import Supplier from '../pages/orders/Supplier'
 
 Vue.use(Router)
 const routes = [
@@ -17,6 +19,11 @@ const routes = [
   },
   {
     path: '/',
+    name: 'Index',
+    component: Index
+  },
+  {
+    path: '/main',
     name: 'Main',
     component: Main
   },
@@ -36,14 +43,19 @@ const routes = [
     component: Express
   },
   {
-    path: '/sample',
-    name: 'Sample',
-    component: Sample
+    path: '/customer',
+    name: 'Customer',
+    component: Customer
   },
   {
     path: '/modify',
     name: 'Modify',
     component: Modify
+  },
+  {
+    path: '/supplier',
+    name: 'Supplier',
+    component: Supplier
   }
 ]
 
