@@ -21,9 +21,16 @@
     />
     <van-field
       v-model="phone"
-      type="text"
       label="移动电话："
       placeholder=""
+    />
+    <van-field
+      v-model="address"
+      label="公司地址："
+      placeholder=""
+      type="textarea"
+      :clearable="true"
+      @clear="showAddrEditor"
     />
     <!--<van-address-edit-->
       <!--:area-list="areaList"-->
@@ -40,18 +47,24 @@
     <!--<div><span>公司名称：</span><input v-model="comName"/></div>-->
     <!--<div><span>姓名：</span><input v-model="name"/></div>-->
     <!--<div><span>移动电话：</span><input v-model="phone"/></div>-->
-    <div style="font-size: 14px"><span style="margin-left: 13px">公司地址：</span><input class="addr-input" v-model="province" @click="show" />
-      <input class="addr-input" v-model="city" @click="show"/>
-      <input class="addr-input" v-model="district" @click="show"/>
-      <van-field
-        v-model="street"
-        type="text"
-        placeholder="街道门牌、楼层房间号等信息"
-      />
-      <!--<input v-model="street" style=""/>-->
-    </div>
+    <!--<div style="font-size: 14px"><span style="margin-left: 13px">公司地址：</span><input class="addr-input" v-model="province" @click="show" />-->
+      <!--<input class="addr-input" v-model="city" @click="show"/>-->
+      <!--<input class="addr-input" v-model="district" @click="show"/>-->
+      <!--&lt;!&ndash;<input v-model="street" style=""/>&ndash;&gt;-->
+    <!--</div>-->
     <div v-show="flag">
-      <van-area :area-list="areaList" :item-height=25 @confirm="onAddrConfirm" @cancel="shut" :value="addrCode"/>
+      <van-area :area-list="areaList" :item-height=25 @confirm="onAddrConfirm" @cancel="shut" :value="addrCode" v-show="showArea"/>
+      <div class="line"></div>
+      <van-cell-group>
+        <van-field
+          v-model="street"
+          type="text"
+          placeholder="街道门牌、楼层房间号等信息"
+          :clearable="true"
+         >
+          <van-button slot="button" size="small" class="bt-big bt-bright" @click="finish">确定</van-button>
+        </van-field>
+      </van-cell-group>
     </div>
     <div class="line"></div>
     <div style="margin-top: 15px">
@@ -93,6 +106,7 @@ export default {
         'city': '',
         'country': ''
       },
+      showArea: true,
       searchResult: '',
       TYPE: {1: '针织', 2: '梭织'},
       addrCode: '440105',
@@ -126,6 +140,14 @@ export default {
     this.setDefault(this.providerInfo)
   },
   methods: {
+    finish () {
+      this.flag = false
+      this.address = this.province + this.city + this.district + this.street
+    },
+    showAddrEditor () {
+      this.showArea = true
+      this.flag = true
+    },
     getKeyWords (keyIdList, groupId) {
       let tmp = []
       let inquiryId = 7
@@ -141,6 +163,7 @@ export default {
         })
         return tmp
       }
+      return tmp // 没有值返回空数组
     },
     update () {
       // 更新当前的window.providerInfo信息
@@ -148,13 +171,50 @@ export default {
       let szObjList = this.getKeyWords(this.szResult, 2)
       let keywords = zzObjList.concat(szObjList)
       window.providerInfo = {
+        'providerId': window.providerInfo.providerId,
         'companyName': this.companyName,
         'name': this.name,
         'phone': this.phone,
         'address': this.province + this.city + this.district + this.street,
         'keywords': keywords
       }
-      alert('信息修改成功！')
+      let url = '/tsebuapi/show.do?'
+      let busiKeywords = []
+      this.zzResult.forEach(obj => {
+        busiKeywords.push({'keyId': obj})
+      })
+      this.szResult.forEach(obj => {
+        busiKeywords.push({'keyId': obj})
+      })
+      console.log('busiKeywords=>', busiKeywords)
+      let provider = {
+        'userId': window.providerInfo.providerId,
+        'regTel': this.phone,
+        'name': this.companyName, // 公司名
+        'address': this.province + this.city + this.district + this.street,
+        'linkman': this.name,
+        'busiKeywords': busiKeywords
+      }
+      let formdata = {
+        'cmd': 'selfMdfProvider',
+        'userId': window.providerInfo.providerId,
+        'provider': JSON.stringify(provider)
+      }
+      console.log('modify=>formdata==>', formdata)
+      // if (window.providerInfo.providerId) {
+      //   return false
+      // }
+      this.axios.post(url, this.qs.stringify(formdata), {
+        headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}}).then(res => {
+        console.log('modify==>res:', res)
+        if (res.exId) {
+          alert(res.desc)
+        }
+        if (res.data && (res.data.result === 0)) {
+          console.log('res.desc:::', res.data.desc)
+          alert(res.data.desc + '数据更新成功！')
+        }
+      })
       // [
       // {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
       //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
@@ -223,12 +283,15 @@ export default {
     // setAddrCode () {
     //   this.addrCode = '440105'
     // },
+    shut () {
+      this.showArea = false
+    },
     setDefault (data) {
       this.companyName = data.companyName
       this.name = data.name
       this.phone = data.phone
       this.address = data.address
-      this.splitAddr(this.address)
+      // this.splitAddr(this.address)
       let tmpMajor = data.keywords
       tmpMajor.forEach(major => {
         if (major.groupId === 1) {
@@ -278,10 +341,7 @@ export default {
       this.province = e[0].name
       this.city = e[1].name
       this.district = e[2].name
-      this.flag = false
-    },
-    shut () {
-      this.flag = false
+      this.showArea = false
     },
     onSave () {
       // Toast('save')
