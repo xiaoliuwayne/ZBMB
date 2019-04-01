@@ -7,7 +7,8 @@
       class="main-bk header"
     />
     <div class="imgs" >
-      <img v-for="(url,kk) in detailData.imgList" :key="kk"  v-lazy="url" alt="布料图片">
+      <img v-for="(url,kk) in detailData.imgList" :key="kk"  v-lazy="url" alt="布料图片" @click="clickImg($event)">
+      <big-img v-if="showImg" @clickit="viewImg" :imgSrc="imgSrc"></big-img>
     </div>
     <div class="line"></div>
     <p class="p-header">需求说明：</p>
@@ -131,9 +132,13 @@
 
 <script>
 import {formatDate, CUSTOMIZE, TYPE} from '../../assets/js/common.js'
+import BigImg from '../../../src/components/BigImg'
 export default {
+  components: {'big-img': BigImg},
   data () {
     return {
+      showImg: false,
+      imgSrc: '',
       detailData: {},
       inquiryId: 0,
       providerId: 0,
@@ -238,6 +243,17 @@ export default {
       } else {
         this.$router.push('/')
       }
+    },
+    clickImg (e) {
+      this.showImg = true
+      // 获取当前图片地址
+      console.log('clickImg=>e', e)
+      this.imgSrc = e.currentTarget.src
+      // this.imgSrc = e.target.dataset.src
+      console.log('this.imgSrc: ', this.imgSrc)
+    },
+    viewImg () {
+      this.showImg = false
     }
   }
 }
