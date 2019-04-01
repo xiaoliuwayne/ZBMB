@@ -94,8 +94,8 @@ export default {
       this.providerId = 28191
       let param = {
         'sendProviderId': this.providerId,
-        'responsed': responsedId,
-        'inquiryId': 7
+        'responsed': responsedId
+        // 'inquiryId': 7
       }
       let formData = {
         'cmd': 'queryInquiryList',
@@ -127,7 +127,7 @@ export default {
       response.list.forEach(obj => {
         let tmpCreate = formatDate(obj.createTime)
         let tmpExpire = formatDate(obj.expireTime)
-        if (id === 0) { // 暂时互换，测试 id === 1
+        if (id === 0) { // (id === 1 暂时改为 0 以测试
           this.showDatas.push({
             'imgUrl': obj.imageList[0],
             'createTime': tmpCreate,
