@@ -31,12 +31,14 @@
         type="text"
         label="色卡编号："
         placeholder=""
+        required
       />
       <van-field
         v-model="unitPrice"
         type="number"
-        label="单价："
+        label="单价/元："
         placeholder=""
+        required
       />
       <van-field
         v-model="productName"
@@ -74,7 +76,7 @@
         <van-radio-group v-model="sampleStatus" style="display: flex">
           <van-radio name="0">免费</van-radio>
           <van-radio name="1">收费</van-radio>
-          <input :disabled="flag" v-model="samplePrice" style="width: 80px;margin: auto 5px" type="number"/>
+          <input :disabled="flag" v-model="samplePrice" style="width: 80px;margin: auto 5px" type="number" placeholder="单位：元"/>
         </van-radio-group>
       </div>
       <p class="p-header-small">面料说明：</p>
@@ -85,7 +87,7 @@
     <div>
       <p class="p-header">我的联系方式：
         <button class="bt-bright" style="float: right">
-          <router-link :to="{name: 'Modify',query:{'defaultInfo': defaultInfo}}" style="color: white">
+          <router-link :to="{name: 'Modify'}" style="color: white;font-size: 14px;font-weight: normal">
             修改
           </router-link>
         </button>
@@ -146,7 +148,7 @@
 </template>
 
 <script>
-import {CLOTHSTYLE} from '../../assets/js/common'
+import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS} from '../../assets/js/common'
 export default {
   data () {
     return {
@@ -170,19 +172,7 @@ export default {
       providerInfo: {},
       providerKeyWords: [],
       clothstyle: {},
-      flag: true,
-      defaultInfo: {
-        'comName': 'AAAAAAAA',
-        'name': 'BBBB',
-        'phone': '12345678909',
-        'addr': '广东省广州市海珠区新滘西路117号广州酒家',
-        'major': [
-          {'groupId': 1, 'list': [{'keyId': 1016, 'keyword': '直贡呢'}, {'keyId': 1017, 'keyword': '针织毛呢'}, {'keyId': 1018, 'keyword': '珊瑚绒'}]},
-          {'groupId': 2,
-            'list': [ {'keyId': 2006, 'keyword': '平布'}, {'keyId': 2007, 'keyword': '牛仔面料'}, {'keyId': 2008, 'keyword': '梭织棉麻'},
-              {'keyId': 2009, 'keyword': '塔丝隆'}, {'keyId': 2010, 'keyword': '尼丝纺'}, {'keyId': 2011, 'keyword': '牛津布'}]}
-        ]
-      }
+      flag: true
     }
   },
   created () {
@@ -222,6 +212,27 @@ export default {
   },
   methods: {
     postHttpData () {
+      // 将数据设置为全局
+      if ((this.colorCardCode === '') || (this.unitPrice === '')) {
+        alert('单价或者色卡编号没有填写！')
+        return false
+      }
+      let postImgDatas = []
+      this.postData.forEach(file => {
+        postImgDatas.push(file.content)
+      })
+      window.providerFeedBack = {
+        'imgList': postImgDatas,
+        'inStock': FEEDBACK_SPOTSTATUS[this.spotStatus],
+        'productName': this.productName,
+        'desc': this.description,
+        'colorCode': this.colorCardCode,
+        'weight': this.weight,
+        'samplePrice': this.samplePrice,
+        'price': this.unitPrice,
+        'width': this.width,
+        'ingredients': this.ingredients // 成分
+      }
       let url = '/tsebuapi/show.do?'
       let submitDatas = {
         'inquiryId': this.inquiryId,
@@ -236,7 +247,7 @@ export default {
         'sampleStatus': this.sampleStatus,
         'samplePrice': this.samplePrice,
         'description': this.description,
-        'imgUrlListValue': this.postData
+        'imgUrlListValue': this.imgUrlListValue
       }
       let formData = {
         'cmd': 'insertDemandReceipt',
@@ -244,7 +255,7 @@ export default {
       }
       this.axios.post(url, this.qs.stringify(formData), {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }}).then(
         res => {
           console.log('customer=>res', res)
@@ -274,6 +285,7 @@ export default {
             this.sampleStatus = '0'
             this.samplePrice = 0.0
             this.description = ''
+            this.postData = []
           }
         }
       ).catch(function (error) {
@@ -300,6 +312,21 @@ export default {
       console.log('file.content: ', file.content)
       this.postData.push(file)
       console.log('this.postData', this.postData)
+      // 上传图片到后台
+      let url = '/tsebuapi/upload?type=99'
+      let fd = new FormData()
+      fd.append('upImgs', file.file)
+      console.log('fd:', fd)
+      console.log('ddddd', fd.get('upImgs'))
+      this.axios.post(url, fd, {headers: {
+        'Content-Type': 'multipart/form-data'
+      }}).then(res => {
+        console.log('onRead=>res', res)
+        this.imgUrlListValue.push(res.data.urls[0].image)
+        console.log('this.imgUrlListValue:', this.imgUrlListValue)
+      }).catch(err => {
+        alert(err)
+      })
     },
     // 上传图片
     // onRead (file) {
