@@ -55,20 +55,6 @@
         :readonly="true"
       />
       <van-field
-        v-model="showData.colorCode"
-        type="text"
-        label="色卡编号："
-        placeholder=""
-        :readonly="true"
-      />
-      <van-field
-        v-model="showData.colorCode"
-        type="text"
-        label="色卡编号："
-        placeholder=""
-        :readonly="true"
-      />
-      <van-field
         v-model="showData.inStock"
         type="text"
         label="是否现货："
@@ -77,9 +63,9 @@
       />
       <van-field
         v-model="showData.samplePrice"
-        type="text"
+        type="number"
         label="调样价格："
-        placeholder=""
+        placeholder="免费"
         :readonly="true"
       />
       <!--<p>色卡编号：{{showData.colorCode}}</p>-->
@@ -105,28 +91,28 @@
     <p class="p-header">供应商信息：</p>
     <div class="com-info">
       <van-field
-        v-model="showData.companyName"
+        v-model="comInfo.companyName"
         type="text"
         label="公司名称："
         placeholder=""
         :readonly="true"
       />
       <van-field
-        v-model="showData.name"
+        v-model="comInfo.name"
         type="text"
         label="姓名："
         placeholder=""
         :readonly="true"
       />
       <van-field
-        v-model="showData.phone"
+        v-model="comInfo.phone"
         type="text"
         label="移动电话："
         placeholder=""
         :readonly="true"
       />
       <van-field
-        v-model="showData.address"
+        v-model="comInfo.address"
         type="textarea"
         label="收货地址："
         placeholder=""
@@ -141,102 +127,77 @@
 </template>
 
 <script>
-import {SPOTSTATUS} from '../../assets/js/common.js'
 export default {
   data () {
     return {
       flag: '',
       showData: {},
-      addrBase: 'jjjjjjjjjjjjjjjjj',
-      addrOther: 'kkdkdkddkdkdkd',
       imageList: [
         require('../../assets/zsi.png'),
         require('../../assets/zsi.png'),
         require('../../assets/zsi.png'),
         require('../../assets/zsi.png')
       ],
-      desc: {
-        'clothType': '一级分类、二级分类',
-        'type': '色卡',
-        'time': '3天',
-        'customization': '不接受定制',
-        'specific': '面料说明、面料说明、面料说明、面料说明、面料说明、面料说明、面料说明、面料说明、面料说明、面料说明、' +
-            '面料说明、面料说明、面料说明、面料说明、面料说明、面料'
-      },
-      comInfo: {
-        'comName': 'XXXXXXXXXXX',
-        'name': 'XXX',
-        'phone': 'XXXXXXXXXXX',
-        'addr': 'XXXXXXXXXXXXXXXXXXXXXXXXXX'
-      },
-      feedBackData: {
-        'img': require('../../assets/zsi.png'),
-        'colorCode': 'ASD12365478',
-        'price': '5.00/米',
-        'samplePrice': '10.00/米',
-        'dateTime': '2019.3.22 20:26',
-        'remind': '待确认调版',
-        'express': {'name': '顺丰物流', 'trackingNO': '123456789876'}
-      }
+      comInfo: {}
     }
   },
   created () {
-    let flag = this.$route.params.flag
-    let receiptId = this.$route.params.receiptId
-    receiptId = 11
-    console.log('Requirement => flag', flag)
-    this.flag = flag
-    this.getHttpData(receiptId)
+    this.comInfo = window.providerInfo
+    this.showData = window.providerFeedBack
+    if (!this.showData) {
+      alert('您还没有填写需求回单！')
+      this.back()
+    }
+    // let flag = this.$route.params.flag
+    // let receiptId = this.$route.params.receiptId // 这个参数暂时没有传过来
+    // receiptId = 11
+    // console.log('supplier => flag', flag)
+    // this.flag = flag
+    // this.getHttpData(receiptId)
   },
   methods: {
-    getHttpData (receiptId) {
-      let url = '/tsebuapi/show.do?'
-      let formData = {
-        'cmd': 'queryDemandReceipt',
-        'receiptId': receiptId
-      }
-      this.axios.post(url, this.qs.stringify(formData), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }}).then(
-        res => {
-          console.log('supplier=>res', res)
-          let response = res.data
-          if (response.exId) {
-            alert(response.exDesc)
-            this.back()
-          } else {
-            console.log('supplier=>response', response)
-            this.showData['imgList'] = response.imageList || this.imageList
-            this.showData['clothType'] = '一级分类、二级分类' // response.imageList
-            this.showData['companyName'] = response.name || '似乎没有该字段'
-            this.showData['name'] = response.name || '似乎没有该字段'
-            this.showData['phone'] = response.tel || '似乎没有该字段'
-            this.showData['inStock'] = SPOTSTATUS[response.spotStatus]
-            this.showData['productName'] = response.productName
-            this.showData['desc'] = response.description
-            this.showData['colorCode'] = response.colorCardCode
-            this.showData['weight'] = response.weight
-            this.showData['samplePrice'] = response.samplePrice
-            this.showData['price'] = response.unitPrice
-            this.showData['width'] = response.width
-            this.showData['ingredients'] = response.ingredients // 成分
-            this.showData['address'] = response.address || '似乎没有该字段'
-          }
-        }
-      ).catch(function (error) {
-        console.log('error', error)
-      })
-    },
+    // getHttpData (receiptId) {
+    //   let url = '/tsebuapi/show.do?'
+    //   let formData = {
+    //     'cmd': 'queryDemandReceipt',
+    //     'queryDatas': JSON.stringify({}),
+    //     'receiptId': receiptId
+    //   }
+    //   this.axios.post(url, this.qs.stringify(formData), {
+    //     headers: {
+    //       'Content-Type': 'application/x-www-form-urlencoded'
+    //     }}).then(
+    //     res => {
+    //       console.log('supplier=>res', res)
+    //       let response = res.data
+    //       if (response.exId) {
+    //         alert(response.exDesc)
+    //         this.back()
+    //       } else {
+    //         console.log('supplier=>response', response)
+    //         this.setShowData(response)
+    //       }
+    //     }
+    //   ).catch(function (error) {
+    //     console.log('error', error)
+    //   })
+    // },
+    // setShowData (response) {
+    //   this.showData['imgList'] = response.imgUrlList
+    //   this.showData['clothType'] = '一级分类、二级分类' // response.imageList
+    //   this.showData['inStock'] = SPOTSTATUS[response.spotStatus]
+    //   this.showData['productName'] = response.productName
+    //   this.showData['desc'] = response.description
+    //   this.showData['colorCode'] = response.colorCardCode
+    //   this.showData['weight'] = response.weight
+    //   this.showData['samplePrice'] = response.samplePrice
+    //   this.showData['price'] = response.unitPrice
+    //   this.showData['width'] = response.width
+    //   this.showData['ingredients'] = response.ingredients // 成分
+    //   console.log('supplier=>this.showData', this.showData)
+    // },
     back () {
       this.$router.go(-1)
-    },
-    go (flag) {
-      if (flag === 'accept') {
-        this.$router.push('/customer')
-      } else {
-        this.$router.push('/')
-      }
     }
   }
 }
