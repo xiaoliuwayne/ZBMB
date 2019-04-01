@@ -26,6 +26,7 @@ var CUSTOMIZE = {0: '不接受定制', 1: '接受定制'}
 var TYPE = {1: '色卡', 2: '剪版'}
 var STATUS = {0: '待接单', 1: '已接单'}
 var SPOTSTATUS = {0: '有现货', 1: '无现货'}
+var FEEDBACK_SPOTSTATUS = {'0': '现货', '1': '定制'}
 var CLOTHSTYLE = {1: '针织', 2: '梭织'}
 // var formatDate = function (timestamp) {
 function formatDate (timestamp) {
@@ -40,4 +41,4 @@ function formatDate (timestamp) {
   return newTime
 }
 
-export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE}
+export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE, FEEDBACK_SPOTSTATUS}
