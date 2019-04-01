@@ -12,7 +12,7 @@
           <!--<big-img v-if="showImg" @clickit="viewImg" :imgSrc="imgSrc"></big-img>-->
         <!--</van-swipe-item>-->
       <!--</van-swipe>-->
-      <img v-for="(url,index) in imageList" :key="index" :src="url" alt="布料图片" @click="clickImg($event)">
+      <img v-for="(url,index) in imageList" :key="index" v-lazy="url" alt="布料图片" @click="clickImg($event)">
       <big-img v-if="showImg" @clickit="viewImg" :imgSrc="imgSrc"></big-img>
     </div>
     <div class="line"></div>
@@ -99,7 +99,7 @@ export default {
           this.$router.push('/')
         } else {
           console.log('main==>response', response)
-          this.provider = response.provider
+          this.provider = response.provider.name
           this.companyName = response.inquiry.companyName
           this.name = response.inquiry.name
           let timestamp = response.inquiry.expireTime
@@ -124,17 +124,19 @@ export default {
           }
           // 供应商的基本信息
           window.providerInfo = {
-            'companyName': response.provider,
-            'name': '我来自Main=>window.providerInfo,没有此字段',
-            'phone': response.tel,
-            'address': '我来自Main=>window.providerInfo,没有此字段',
-            'keywords': [
-              {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
-              {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
-              {'groupId': 2, 'inquiryId': 7, 'keyId': 2006, 'keyword': '平布'},
-              {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
-            ]
+            'providerId': response.userId,
+            'companyName': response.provider.name,
+            'name': response.provider.linkman,
+            'phone': response.provider.regTel,
+            'address': response.provider.address,
+            'keywords': response.provider.busiKeywords
           }
+          // [
+          // {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
+          //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
+          //   {'groupId': 2, 'inquiryId': 7, 'keyId': 2006, 'keyword': '平布'},
+          //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
+          // ]
           console.log('main=>window.providerInfo', window.providerInfo)
         }
       })
