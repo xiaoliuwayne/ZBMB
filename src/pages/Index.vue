@@ -76,8 +76,7 @@ export default {
     height: 17vw;
     /*position: fixed;*/
     /*bottom: 5vw;*/
-    margin-left: 6vw;
-    margin-top: 28vw;
+    margin: 10vw 6vw;
   }
   .cc p {
     color: white;
