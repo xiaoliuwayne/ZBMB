@@ -24,6 +24,8 @@ import {
   SwipeItem,
   Field,
   AddressEdit,
+  Cell,
+  CellGroup,
   Toast
   // ImagePreview  // 图片预览
 } from 'vant'
@@ -41,6 +43,7 @@ Vue.use(Checkbox).use(CheckboxGroup)
 Vue.use(Swipe).use(SwipeItem)
 Vue.use(Field)
 Vue.use(AddressEdit)
+Vue.use(Cell).use(CellGroup)
 Vue.use(Toast)
 
 Vue.config.productionTip = false
