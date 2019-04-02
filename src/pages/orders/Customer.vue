@@ -250,6 +250,7 @@ export default {
         'imgUrlListValue': this.imgUrlListValue
       }
       let formData = {
+        // 'cmd': 'insertDemandReceipt',
         'cmd': 'insertDemandReceipt',
         'submitDatas': JSON.stringify(submitDatas)
       }
@@ -262,16 +263,16 @@ export default {
           let response = res.data
           if (response.exId) {
             alert(response.exDesc)
-            this.colorCardCode = ''
-            this.unitPrice = 0.0
-            this.productName = ''
-            this.ingredients = ''
-            this.width = ''
-            this.weight = ''
-            this.spotStatus = '0'
-            this.sampleStatus = '0'
-            this.samplePrice = 0.0
-            this.description = ''
+            // this.colorCardCode = ''
+            // this.unitPrice = 0.0
+            // this.productName = ''
+            // this.ingredients = ''
+            // this.width = ''
+            // this.weight = ''
+            // this.spotStatus = '0'
+            // this.sampleStatus = '0'
+            // this.samplePrice = 0.0
+            // this.description = ''
           } else {
             console.log('customer=>response', response)
             alert(response.desc + '提交成功！')
@@ -286,6 +287,7 @@ export default {
             this.samplePrice = 0.0
             this.description = ''
             this.postData = []
+            this.back()
           }
         }
       ).catch(function (error) {
