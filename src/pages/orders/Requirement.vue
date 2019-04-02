@@ -99,15 +99,17 @@
       <div class="line"></div>
       <p class="p-header">回单信息：</p>
       <div class="card">
-        <span><img :src="feedBackData.img" style="margin:5px;"></span>
-        <span>
-          <p>色卡编号：{{detailData.colorCode}}</p>
-          <p>单价：{{detailData.price}}</p>
-          <p>调样价格：{{detailData.samplePrice}}</p>
-        </span>
-        <span>
-          <p>{{detailData.createTime}}</p>
-          <p>{{detailData.status}}</p>
+        <div style="width: 30vw"  align="center">
+          <img :src="feedBackData.img" style="margin-top:10px;width: 18vw;height: 18vw">
+        </div>
+        <div style="width: 40vw;">
+          <p>色卡编号：{{feedBackData.colorCode}}</p>
+          <p>单价：{{feedBackData.price}}</p>
+          <p>调样价格：{{feedBackData.samplePrice}}</p>
+        </div>
+        <div style="width: 30vw;">
+          <p>{{feedBackData.acceptDate}}</p>
+          <p>{{feedBackData.sendSatus}}</p>
           <p>
             <!--<router-link :to="{name: 'Supplier'}" class="feedback-check bt-bright">-->
             <button class="feedback-check bt-bright">
@@ -116,12 +118,12 @@
               </router-link>
             </button>
           </p>
-        </span>
+        </div>
       </div>
-      <div class="express-info">
-        <span>物流单号：{{detailData.express}}|{{detailData.trackingNO}}</span>
+      <div class="express-info" v-if="express.number">
+        <span>物流信息：{{express.company}}|{{express.number}}</span>
         <button class="bt-express">
-          <router-link :to="{name: 'Express'}" class="bt-express">
+          <router-link :to="{name: 'Express',params: {'express': this.express}}" class="bt-express">
             查看快递状态
           </router-link>
         </button>
@@ -131,7 +133,7 @@
 </template>
 
 <script>
-import {formatDate, CUSTOMIZE, TYPE} from '../../assets/js/common.js'
+import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS} from '../../assets/js/common.js'
 import BigImg from '../../../src/components/BigImg'
 export default {
   components: {'big-img': BigImg},
@@ -166,27 +168,45 @@ export default {
         'phone': '123456783456',
         'addr': '面料说明面料说明面料说明'
       },
-      feedBackData: {
-        'img': require('../../assets/zsi.png'),
-        'colorCode': 'ASD12365478',
-        'price': '5.00/米',
-        'samplePrice': '10.00/米',
-        'dateTime': '2019.3.22 20:26',
-        'remind': '待确认调版',
-        'express': {'name': '顺丰物流', 'trackingNO': '123456789876'}
-      }
+      feedBackData: {},
+      express: {}
     }
   },
   created () {
     let flag = this.$route.params.flag
     this.providerId = this.$route.params.providerId
     this.inquiryId = this.$route.params.inquiryId
-    this.inquiryId = 7
+    console.log('requirement==>this.inquiryId', this.inquiryId)
+    // this.inquiryId = 7
     console.log('Requirement => flag', flag)
     this.flag = flag
+    if (flag === 'g') { // 已经接单了，可以获取回单信息
+      this.getFeedBackData()
+    }
     this.getHttpData(this.inquiryId)
   },
   methods: {
+    getFeedBackData () { // 获取供应商回单信息
+      let url = ''
+      let formdata = {}
+      this.axios.post(url, this.qs.stringify(formdata), {headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }}).then(res => {
+        console.log('getFeedBackData=>res', res)
+        if (res.exId) {
+          alert(res.desc)
+        } else {
+          console.log('getFeedBackData=>res.data: ', res.data)
+          this.feedBackData['img'] = require('../../assets/zsi.png')
+          this.feedBackData['colorCode'] = 'ASD12365478'
+          this.feedBackData['price'] = '5.00/米'
+          this.feedBackData['samplePrice'] = '10.00/米'
+          this.feedBackData['acceptDate'] = '2019.3.22 20:26'
+          this.feedBackData['sendSatus'] = SENDSTATUS[0]
+          this.feedBackData['express'] = {'name': '顺丰物流', 'trackingNO': '123456789876'}
+        }
+      })
+    },
     getHttpData (inquiryId) {
       let url = '/tsebuapi/show.do?'
       let formData = {
@@ -202,30 +222,26 @@ export default {
           let response = res.data
           if (response.exId) {
             alert(response.exDesc)
+            this.back()
           } else {
             console.log('requiremnet=>response', response)
             this.detailData['imgList'] = response.imageList
-            this.detailData['clothType'] = '一级分类、二级分类' // response.imageList
+            this.detailData['clothType'] = this.getClothType(response.keywords) // response.imageList
             this.detailData['expireTime'] = formatDate(response.expireTime)
-            this.detailData['createTime'] = formatDate(response.createTime)
+            // this.detailData['createTime'] = formatDate(response.createTime)
             this.detailData['companyName'] = response.companyName
             this.detailData['name'] = response.name
             this.detailData['phone'] = response.phone
             this.detailData['type'] = TYPE[response.type]
             this.detailData['acceptCustomize'] = CUSTOMIZE[response.acceptCustomize]
             this.detailData['desc'] = response.desc
-            this.detailData['colorCode'] = 'ASD12365478' // response.
-            this.detailData['status'] = '待确认调版' // response // 待确认调版
-            this.detailData['samplePrice'] = '15.00/米' // response.
-            this.detailData['price'] = '10.00/米'// response.
-            this.detailData['trackingNO'] = '123456789876' // response.
-            this.detailData['express'] = '顺丰快递' // response.
             this.address = response.address
-            // let addr = response.address
-            // if (addr) {
-            //   this.addrBase = addr.split('区')[0] + '区'
-            //   this.addrOther = addr.split('区')[1]
-            // }
+            if (response.trackingNum) { // 如果有物流信息,
+              this.express.company = response.deliCom
+              this.express.number = response.trackingNum
+              this.express.companyType = response.deliType
+              this.express.receiverPhone = response.phone
+            }
           }
         }
       ).catch(function (error) {
@@ -254,6 +270,11 @@ export default {
     },
     viewImg () {
       this.showImg = false
+    },
+    getClothType (keyWords) { // 设置面料种类
+      let first = CLOTHSTYLE[keyWords[0].groupId]
+      let second = keyWords[0].keyword
+      return first + '-' + second
     }
   }
 }
