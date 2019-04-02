@@ -84,22 +84,27 @@ p{
   width: 100%;
   background: #eeeef3;
   min-height: 85px;
-  display: inline-flex;
+  display: flex;
   margin-bottom: 10px;
 }
-.card span{
+.card div{
   line-height: 100%;
-  display: table;
-  margin-top: 8px;
+  width: 100%;
 }
 .card p{
   font-size: 12px;
-  /*margin: 0 15px;*/
+  margin: 10px 0;
+}
+.card-div-span{
+  margin: 0 3px
+}
+.card-div-p{
+  margin: 5px 3px;
 }
 .card img{
   width: 60px;
   height: 60px;
-  margin: 20px 5px;
+  margin: 20px 2px;
 }
 .dot-line{
   width: 95%;
@@ -220,8 +225,12 @@ textarea{
 
 /*express-data*/
 .content{
-  width: 85%;
+  width: 90%;
   margin: 15px;
+}
+.content p{
+  font-size: 14px;
+  margin: 10px 0;
 }
 
 /*sample*/
@@ -240,3 +249,5 @@ textarea{
 .van-radio{
   margin: 10px 15px;
 }
+
+
