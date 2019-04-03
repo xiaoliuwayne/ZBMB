@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @touchmove.prevent>
     <h3 class="main-bk">{{ title }}</h3>
     <p>您好！{{provider}}：</p>
     <p>{{companyName}}的{{name}}向您发来了一个面料采购信息！</p>
@@ -55,7 +55,7 @@
     <div class="line"></div>
     <h4 >请进入“找布买布”，接这一单</h4>
     <!--<van-button type="info" @click="goOrders" style="width:30%;margin: 0 35%;background: #4b8feb;border-radius: 5px;color: white ">-->
-      <van-button @click="goOrders" style="" class="bt-bright bt-accept">
+      <van-button @click="accept" style="" class="bt-bright bt-accept">
         接单
      </van-button>
   </div>
@@ -64,7 +64,7 @@
 <script>
 import BigImg from '../../src/components/BigImg'
 // import {CUSTOMIZE, TYPE, formatDate} from '../../static/js/common.js'
-import {CUSTOMIZE, TYPE, formatDate} from '../assets/js/common.js'
+import {CUSTOMIZE, TYPE, formatDate, BASEURL, API} from '../assets/js/common.js'
 export default {
   components: {'big-img': BigImg, CUSTOMIZE, TYPE, formatDate},
   data () {
@@ -80,18 +80,20 @@ export default {
       type: '',
       expireTime: '',
       providerId: 0,
+      inquiryId: 0,
       imageList: []
     }
   },
   created () {
     let code = this.$route.params.code
+    code = localStorage.getItem('code')
     console.log('code:', code)
     this.init(code)
   },
   methods: {
     init (code) {
-      let url = '/tsebuapi/show.do?cmd=querySendInfoByCode&code=' + String(code)
-      this.axios.get(url).then(res => {
+      let url = API + '/show.do?cmd=querySendInfoByCode&code=' + String(code)
+      this.axios.get(BASEURL + url).then(res => {
         console.log('main==>res', res)
         let response = res.data
         if (response.exId) {
@@ -110,6 +112,7 @@ export default {
           this.customization = CUSTOMIZE[customizationId]
           this.desc = response.inquiry.desc
           this.providerId = response.userId
+          this.inquiryId = response.inquiryId
           let imgList = response.inquiry.imageList
           if (imgList.length === 0) {
             this.imageList = [
@@ -131,19 +134,44 @@ export default {
             'address': response.provider.address,
             'keywords': response.provider.busiKeywords
           }
-          // [
-          // {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
-          //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
-          //   {'groupId': 2, 'inquiryId': 7, 'keyId': 2006, 'keyword': '平布'},
-          //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
-          // ]
           console.log('main=>window.providerInfo', window.providerInfo)
+          this.getAcceptStatus()
         }
       })
     },
-    goOrders () {
-      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId}})
-      // alert('系统维护中')
+    accept () {
+      this.$router.push({name: 'Customer', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId}})
+    },
+    getAcceptStatus () {
+      // 判断是否已经接了该单
+      let url = API + '/show.do?'
+      let formdata = {
+        'cmd': 'getInquiryReceiptList',
+        'userId': this.providerId,
+        'page': 0,
+        'pageSize': 10,
+        'inquiryId': this.inquiryId,
+        'status': -1
+      }
+      if (this.providerId <= 0) { // Id异常
+        alert('this.providerId:' + String(this.providerId))
+        return false
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }}).then(res => {
+        console.log('main=>getAcceptStatus=>res', res)
+        if (res.exId) {
+          alert(res.desc)
+        } else {
+          console.log('main=>getAcceptStatus=>res.data: ', res.data)
+          let tmpList = res.data.list
+          if (tmpList.length > 0) {
+            // 已接单，跳到已接单列表
+            this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId}})
+          }
+        }
+      })
     },
     clickImg (e) {
       this.showImg = true
