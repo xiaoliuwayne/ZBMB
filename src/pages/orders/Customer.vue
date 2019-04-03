@@ -36,7 +36,7 @@
       <van-field
         v-model="unitPrice"
         type="number"
-        label="单价/元："
+        label="剪版价/元："
         placeholder=""
         required
       />
@@ -86,11 +86,15 @@
     <div class="line"></div>
     <div>
       <p class="p-header">我的联系方式：
-        <button class="bt-bright" style="float: right">
-          <router-link :to="{name: 'Modify'}" style="color: white;font-size: 14px;font-weight: normal">
-            修改
-          </router-link>
-        </button>
+        <!--<van-button class="bt-bright" style="float: right" @click="goModify">-->
+        <!--<button class="bt-bright" style="float: right">-->
+          <!--<router-link :to="{name: 'Modify'}" style="color: white;font-size: 14px;font-weight: normal">-->
+            <!--修改-->
+          <!--</router-link>-->
+        <!--</button>-->
+        <van-button class="bt-bright" style="float: right; color: white; font-size: 14px;height: 25px;line-height: 25px" @click="goModify">
+          修改
+        </van-button>
         <!--<span style="float: right">-->
         <!--<router-link :to="{name: 'Modify',query:{'defaultInfo': defaultInfo}}">修改</router-link>-->
         <!--</span>-->
@@ -148,10 +152,11 @@
 </template>
 
 <script>
-import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS} from '../../assets/js/common'
+import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS, BASEURL, API} from '../../assets/js/common'
 export default {
   data () {
     return {
+      tmpSaveInput: {},
       inquiryId: 0,
       providerId: 0,
       colorCardCode: '',
@@ -169,6 +174,7 @@ export default {
       imgIndex: ['1', '2', '3', '4', '5'],
       addrBase: '广东省广州市海珠区',
       addrOther: '新滘西路117号广州酒家',
+      address: '',
       providerInfo: {},
       providerKeyWords: [],
       clothstyle: {},
@@ -179,6 +185,25 @@ export default {
     this.clothstyle = CLOTHSTYLE
     this.providerId = this.$route.params.providerId
     this.inquiryId = this.$route.params.inquiryId
+    console.log('customer==created==>this.providerId', this.providerId)
+    if (this.$route.params.tmpSaveInput) { // 将保持的记录赋值回去
+      let tmpSaveInput = this.$route.params.tmpSaveInput
+      // this.inquiryId = tmpSaveInput['inquiryId']
+      // this.providerId = tmpSaveInput['userId']
+      this.colorCardCode = tmpSaveInput['colorCardCode']
+      this.unitPrice = tmpSaveInput['unitPrice']
+      this.productName = tmpSaveInput['productName']
+      this.ingredients = tmpSaveInput['ingredients']
+      this.width = tmpSaveInput['width']
+      this.weight = tmpSaveInput['weight']
+      this.spotStatus = tmpSaveInput['spotStatus']
+      this.sampleStatus = tmpSaveInput['sampleStatus']
+      this.samplePrice = tmpSaveInput['samplePrice']
+      this.description = tmpSaveInput['description']
+      this.imgUrlListValue = tmpSaveInput['imgUrlListValue']
+    }
+    console.log('customer=> this.providerId', this.providerId)
+    console.log('customer=> this.inquiryId', this.inquiryId)
     this.providerInfo = window.providerInfo
     let zzKeyWords = ''
     let szKeyWords = ''
@@ -211,10 +236,26 @@ export default {
   mounted () {
   },
   methods: {
+    goModify () {
+      this.tmpSaveInput['inquiryId'] = this.inquiryId
+      this.tmpSaveInput['providerId'] = this.providerId
+      this.tmpSaveInput['colorCardCode'] = this.colorCardCode
+      this.tmpSaveInput['unitPrice'] = this.unitPrice
+      this.tmpSaveInput['productName'] = this.productName
+      this.tmpSaveInput['ingredients'] = this.ingredients
+      this.tmpSaveInput['width'] = this.width
+      this.tmpSaveInput['weight'] = this.weight
+      this.tmpSaveInput['spotStatus'] = this.spotStatus
+      this.tmpSaveInput['sampleStatus'] = this.sampleStatus
+      this.tmpSaveInput['samplePrice'] = this.samplePrice
+      this.tmpSaveInput['description'] = this.description
+      this.tmpSaveInput['imgUrlListValue'] = []
+      this.$router.push({name: 'Modify', params: {'tmpSaveInput': this.tmpSaveInput}})
+    },
     postHttpData () {
       // 将数据设置为全局
       if ((this.colorCardCode === '') || (this.unitPrice === '')) {
-        alert('单价或者色卡编号没有填写！')
+        alert('剪版价或者色卡编号没有填写！')
         return false
       }
       let postImgDatas = []
@@ -233,8 +274,8 @@ export default {
         'width': this.width,
         'ingredients': this.ingredients // 成分
       }
-      let url = '/tsebuapi/show.do?'
-      let submitDatas = {
+      let url = API + '/show.do?'
+      let receipt = {
         'inquiryId': this.inquiryId,
         'userId': this.providerId,
         'colorCardCode': this.colorCardCode,
@@ -249,12 +290,17 @@ export default {
         'description': this.description,
         'imgUrlListValue': this.imgUrlListValue
       }
+      if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
+        alert('this.providerId:' + String(this.providerId) + ',this.inquiryId:' + String(this.inquiryId))
+        return false
+      }
       let formData = {
         // 'cmd': 'insertDemandReceipt',
-        'cmd': 'insertDemandReceipt',
-        'submitDatas': JSON.stringify(submitDatas)
+        'cmd': 'insertInquiryReceipt',
+        'receipt': JSON.stringify(receipt)
       }
-      this.axios.post(url, this.qs.stringify(formData), {
+      console.log('customer==>BASEURL + url:', BASEURL + url)
+      this.axios.post(BASEURL + url, this.qs.stringify(formData), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }}).then(
@@ -287,7 +333,7 @@ export default {
             this.samplePrice = 0.0
             this.description = ''
             this.postData = []
-            this.back()
+            this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'g'}})
           }
         }
       ).catch(function (error) {
@@ -315,7 +361,7 @@ export default {
       this.postData.push(file)
       console.log('this.postData', this.postData)
       // 上传图片到后台
-      let url = '/tsebuapi/upload?type=99'
+      let url = API + '/upload?type=99'
       let fd = new FormData()
       fd.append('upImgs', file.file)
       console.log('fd:', fd)
@@ -330,31 +376,8 @@ export default {
         alert(err)
       })
     },
-    // 上传图片
-    // onRead (file) {
-    // let formData = new window.FormData()
-    // formData.append('file', file.file)
-    // let url = ''
-    // let aaaa = true
-    // try {
-    //   let res = this.axios.post(url, formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data'
-    //     }
-    //   })
-    //   console.log(res)
-    //   if (aaaa) {
-    //     console.log(9876)
-    //   } else {
-    //     console.log(678900)
-    //   }
-    // } catch (e) {
-    //   console.log(e)
-    //   this.$toast(`网络连接错误, 请稍后再试!`)
-    // }
-    // },
     back () {
-      this.$router.go(-1)
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'g'}})
     }
   }
 }
