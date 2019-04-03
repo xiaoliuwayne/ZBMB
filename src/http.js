@@ -9,8 +9,8 @@ import router from './router'
 
 // axios 配置
 axios.defaults.timeout = 5000
-// axios.defaults.baseURL = 'https://www.ebudaowei.cn/tsebuapi/'// 'https://api.github.com';
-// axios.defaults.baseURL = 'http://ts.ebdaowei.com';  //'https://api.github.com';
+// axios.defaults.baseURL = 'https://ts.ebdaowei.com'// 'https://api.github.com';
+// window.location.host // 动态获取域名
 // axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 // 每次请求携带cookies信息
 // axios.defaults.withCredentials = true;
