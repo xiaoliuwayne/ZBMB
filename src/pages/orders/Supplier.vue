@@ -50,7 +50,7 @@
       <van-field
         v-model="showData.price"
         type="text"
-        label="单价："
+        label="剪版价："
         placeholder=""
         :readonly="true"
       />
@@ -68,16 +68,6 @@
         placeholder="免费"
         :readonly="true"
       />
-      <!--<p>色卡编号：{{showData.colorCode}}</p>-->
-      <!--<p>品名：{{showData.productName}}</p>-->
-      <!--<p>成分：{{showData.ingredients}}</p>-->
-      <!--<p>幅宽：{{showData.width}}</p>-->
-      <!--<p>克重：{{showData.weight}}</p>-->
-      <!--<p>单价：{{showData.price}} 元</p>-->
-      <!--<p>是否现货：{{showData.inStock}}</p>-->
-      <!--<p>调样价格：{{showData.samplePrice}} 元</p>-->
-      <!--<p style="font-weight: bolder">面料说明：</p>-->
-      <!--<p>{{showData.desc}}</p>-->
       <van-field
         v-model="showData.desc"
         type="textarea"
@@ -127,77 +117,107 @@
 </template>
 
 <script>
+// CUSTOMIZE, TYPE, formatDate,
+import {BASEURL, API, SPOTSTATUS} from '../../assets/js/common.js'
 export default {
   data () {
     return {
       flag: '',
-      showData: {},
-      imageList: [
-        require('../../assets/zsi.png'),
-        require('../../assets/zsi.png'),
-        require('../../assets/zsi.png'),
-        require('../../assets/zsi.png')
-      ],
+      showData: {
+        // 'desc': '',
+        // 'samplePrice': 0.0,
+        // 'inStock': '',
+        // 'price': 0.0,
+        // 'weight': '',
+        // 'width': '',
+        // 'ingredients': '',
+        // 'productName': '',
+        // 'colorCode': '',
+        // 'imgList': []
+      },
+      providerId: 0,
+      inquiryId: 0,
+      receiptId: 0,
+      // imageList: [
+      //   require('../../assets/zsi.png'),
+      //   require('../../assets/zsi.png'),
+      //   require('../../assets/zsi.png'),
+      //   require('../../assets/zsi.png')
+      // ],
       comInfo: {}
     }
   },
   created () {
     this.comInfo = window.providerInfo
     this.showData = window.providerFeedBack
-    if (!this.showData) {
-      alert('您还没有填写需求回单！')
-      this.back()
+    this.providerId = this.$route.params.providerId
+    this.inquiryId = this.$route.params.inquiryId
+    this.receiptId = this.$route.params.receiptId
+    this.flag = this.$route.params.flag
+    this.showData = {
+      'desc': '',
+      'samplePrice': 0.0,
+      'inStock': '',
+      'price': 0.0,
+      'weight': '',
+      'width': '',
+      'ingredients': '',
+      'productName': '',
+      'colorCode': '',
+      'imgList': []
     }
-    // let flag = this.$route.params.flag
-    // let receiptId = this.$route.params.receiptId // 这个参数暂时没有传过来
-    // receiptId = 11
-    // console.log('supplier => flag', flag)
-    // this.flag = flag
-    // this.getHttpData(receiptId)
+    console.log('supplier=>this.inquiryId', this.inquiryId)
+    console.log('supplier=>this.providerId', this.providerId)
+    console.log('supplier=>this.receiptId', this.receiptId)
+    this.getFeedBackDetail()
   },
   methods: {
-    // getHttpData (receiptId) {
-    //   let url = '/tsebuapi/show.do?'
-    //   let formData = {
-    //     'cmd': 'queryDemandReceipt',
-    //     'queryDatas': JSON.stringify({}),
-    //     'receiptId': receiptId
-    //   }
-    //   this.axios.post(url, this.qs.stringify(formData), {
-    //     headers: {
-    //       'Content-Type': 'application/x-www-form-urlencoded'
-    //     }}).then(
-    //     res => {
-    //       console.log('supplier=>res', res)
-    //       let response = res.data
-    //       if (response.exId) {
-    //         alert(response.exDesc)
-    //         this.back()
-    //       } else {
-    //         console.log('supplier=>response', response)
-    //         this.setShowData(response)
-    //       }
-    //     }
-    //   ).catch(function (error) {
-    //     console.log('error', error)
-    //   })
-    // },
-    // setShowData (response) {
-    //   this.showData['imgList'] = response.imgUrlList
-    //   this.showData['clothType'] = '一级分类、二级分类' // response.imageList
-    //   this.showData['inStock'] = SPOTSTATUS[response.spotStatus]
-    //   this.showData['productName'] = response.productName
-    //   this.showData['desc'] = response.description
-    //   this.showData['colorCode'] = response.colorCardCode
-    //   this.showData['weight'] = response.weight
-    //   this.showData['samplePrice'] = response.samplePrice
-    //   this.showData['price'] = response.unitPrice
-    //   this.showData['width'] = response.width
-    //   this.showData['ingredients'] = response.ingredients // 成分
-    //   console.log('supplier=>this.showData', this.showData)
-    // },
+    getFeedBackDetail () { // 获取供应商回单信息详情
+      let url = API + '/show.do?'
+      let queryDatas = {
+        // 'userId': this.providerId,
+        // 'page': 0,
+        // 'pageSize': 10,
+        // 'inquiryId': this.inquiryId,
+        // 'status': -1
+      }
+      let formdata = {
+        'cmd': 'queryInquiryReceipt',
+        'queryDatas': JSON.stringify(queryDatas),
+        'receiptId': this.receiptId
+      }
+      if (this.receiptId <= 0) { // Id异常
+        alert('this.receiptId:' + String(this.receiptId))
+        return false
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }}).then(res => {
+        console.log('supplier=>res', res)
+        if (res.exId) {
+          alert(res.desc)
+        } else {
+          console.log('getFeedBackDetail=>res.data: ', res.data)
+          console.log('supplier=>this.showData:', this.showData)
+          this.setShowData(res.data)
+        }
+      })
+    },
+    setShowData (data) {
+      this.showData['desc'] = data.description
+      this.showData['samplePrice'] = String(data.samplePrice) + '/元'
+      this.showData['inStock'] = SPOTSTATUS[data.spotStatus]
+      this.showData['price'] = String(data.unitPrice) + '/元'
+      this.showData['weight'] = data.weight
+      this.showData['width'] = data.width
+      this.showData['ingredients'] = data.ingredients
+      this.showData['productName'] = data.productName
+      this.showData['colorCode'] = data.colorCardCode
+      this.showData['imgList'] = data.imgUrlListValue
+    },
     back () {
-      this.$router.go(-1)
+      // this.$router.go(-1)
+      this.$router.push({name: 'Requirement', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': this.flag, 'receiptId': this.receiptId}})
     }
   }
 }
