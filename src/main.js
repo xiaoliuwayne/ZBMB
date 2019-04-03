@@ -58,6 +58,8 @@ Vue.use(VueLazyload, {
   attempt: 3
 })
 
+// const baseUrl = window.location.host
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
