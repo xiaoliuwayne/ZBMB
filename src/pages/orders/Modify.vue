@@ -94,6 +94,7 @@
 
 <script>
 import areaList from '../../assets/js/area'
+import {BASEURL, API} from '../../assets/js/common.js'
 export default {
   components: {areaList},
   data () {
@@ -128,6 +129,9 @@ export default {
       szMajor: {}, // [{keyId: keyWord}..]
       zzMajor: {},
       providerInfo: {},
+      tmpSaveInput: {},
+      inquiryId: 0,
+      providerId: 0,
       flag: false
       // flag: true
     }
@@ -135,6 +139,9 @@ export default {
   created () {
     var _ = require('lodash')
     this.providerInfo = _.cloneDeep(window.providerInfo) // 深拷贝
+    this.tmpSaveInput = this.$route.params.tmpSaveInput
+    this.inquiryId = this.tmpSaveInput['inquiryId']
+    this.providerId = this.tmpSaveInput['providerId']
     this.init()
     console.log('this.providerInfo', this.providerInfo)
     this.setDefault(this.providerInfo)
@@ -178,7 +185,7 @@ export default {
         'address': this.province + this.city + this.district + this.street,
         'keywords': keywords
       }
-      let url = '/tsebuapi/show.do?'
+      let url = API + '/show.do?'
       let busiKeywords = []
       this.zzResult.forEach(obj => {
         busiKeywords.push({'keyId': obj})
@@ -204,7 +211,11 @@ export default {
       // if (window.providerInfo.providerId) {
       //   return false
       // }
-      this.axios.post(url, this.qs.stringify(formdata), {
+      if (window.providerInfo.providerId <= 0) { // Id异常
+        alert('window.providerInfo.providerId:' + String(window.providerInfo.providerId))
+        return false
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {
         headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}}).then(res => {
         console.log('modify==>res:', res)
         if (res.exId) {
@@ -213,6 +224,9 @@ export default {
         if (res.data && (res.data.result === 0)) {
           console.log('res.desc:::', res.data.desc)
           alert(res.data.desc + '数据更新成功！')
+          console.log('this.providerId=>update', this.providerId)
+          console.log('this.inquiryId=>update', this.inquiryId)
+          this.$router.push({name: 'Customer', params: {'tmpSaveInput': this.tmpSaveInput, 'providerId': this.providerId, 'inquiryId': this.inquiryId}})
         }
       })
       // [
@@ -321,8 +335,9 @@ export default {
       // })
     },
     getMajor () {
+      // 获取所有关键字
       // let url = 'http://ts.ebdaowei.com/ebuapi/show.do?cmd=fabricKeywords&groupId=0'
-      let url = '/ebuapi/show.do?cmd=fabricKeywords&groupId=0'
+      let url = API + '/show.do?cmd=fabricKeywords&groupId=0'
       this.axios.get(url).then(res => {
         console.log('getMajor,res: ', res)
         this.allMajor = res.data
@@ -330,7 +345,10 @@ export default {
       })
     },
     back () {
-      this.$router.go(-1)
+      // this.$router.go(-1)
+      console.log('this.providerId=>back', this.providerId)
+      console.log('this.inquiryId=>back', this.inquiryId)
+      this.$router.push({name: 'Customer', params: {'tmpSaveInput': this.tmpSaveInput, 'providerId': this.providerId, 'inquiryId': this.inquiryId}})
     },
     show () {
       this.flag = true
