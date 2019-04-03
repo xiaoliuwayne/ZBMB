@@ -104,7 +104,7 @@
         </div>
         <div style="width: 40vw;">
           <p>色卡编号：{{feedBackData.colorCode}}</p>
-          <p>单价：{{feedBackData.price}}</p>
+          <p>剪版价：{{feedBackData.price}}</p>
           <p>调样价格：{{feedBackData.samplePrice}}</p>
         </div>
         <div style="width: 30vw;">
@@ -113,7 +113,7 @@
           <p>
             <!--<router-link :to="{name: 'Supplier'}" class="feedback-check bt-bright">-->
             <button class="feedback-check bt-bright">
-              <router-link :to="{name: 'Supplier',params:{'flag': flag}}" style="color: white">
+              <router-link :to="{name: 'Supplier',params:{'flag': flag,'providerId': providerId,'inquiryId': inquiryId, 'receiptId': receiptId}}" style="color: white">
                查看
               </router-link>
             </button>
@@ -122,18 +122,18 @@
       </div>
       <div class="express-info" v-if="express.number">
         <span>物流信息：{{express.company}}|{{express.number}}</span>
-        <button class="bt-express">
-          <router-link :to="{name: 'Express',params: {'express': this.express}}" class="bt-express">
-            查看快递状态
-          </router-link>
-        </button>
+        <!--<button class="bt-express">-->
+          <!--<router-link :to="{name: 'Express',params: {'express': this.express}}" class="bt-express">-->
+            <!--查看快递状态-->
+          <!--</router-link>-->
+        <!--</button>-->
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS} from '../../assets/js/common.js'
+import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS, BASEURL, API} from '../../assets/js/common.js'
 import BigImg from '../../../src/components/BigImg'
 export default {
   components: {'big-img': BigImg},
@@ -144,6 +144,7 @@ export default {
       detailData: {},
       inquiryId: 0,
       providerId: 0,
+      receiptId: 0,
       flag: '',
       address: '',
       addrBase: 'XX省XX市XX区',
@@ -168,28 +169,47 @@ export default {
         'phone': '123456783456',
         'addr': '面料说明面料说明面料说明'
       },
-      feedBackData: {},
+      feedBackData: {
+        'img': '',
+        'colorCode': '',
+        'price': '',
+        'samplePrice': '',
+        'acceptDate': '',
+        'sendSatus': ''
+      },
       express: {}
     }
   },
   created () {
-    let flag = this.$route.params.flag
+    this.flag = this.$route.params.flag
     this.providerId = this.$route.params.providerId
     this.inquiryId = this.$route.params.inquiryId
+    this.receiptId = this.$route.params.receiptId
     console.log('requirement==>this.inquiryId', this.inquiryId)
     // this.inquiryId = 7
-    console.log('Requirement => flag', flag)
-    this.flag = flag
-    if (flag === 'g') { // 已经接单了，可以获取回单信息
+    if (this.flag === 'g') { // 已经接单了，可以获取回单信息
       this.getFeedBackData()
+      this.getHttpData(this.inquiryId)
+    } else {
+      this.getHttpData(this.inquiryId)
     }
-    this.getHttpData(this.inquiryId)
   },
   methods: {
     getFeedBackData () { // 获取供应商回单信息
-      let url = ''
-      let formdata = {}
-      this.axios.post(url, this.qs.stringify(formdata), {headers: {
+      let url = API + '/show.do?'
+      let formdata = {
+        'cmd': 'getInquiryReceiptList',
+        'userId': this.providerId,
+        'page': 0,
+        'pageSize': 10,
+        'inquiryId': this.inquiryId,
+        'status': -1
+      }
+      if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
+        alert('this.providerId:' + String(this.providerId) + ',this.inquiryId:' + String(this.inquiryId))
+        return false
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }}).then(res => {
         console.log('getFeedBackData=>res', res)
@@ -197,21 +217,26 @@ export default {
           alert(res.desc)
         } else {
           console.log('getFeedBackData=>res.data: ', res.data)
-          this.feedBackData['img'] = require('../../assets/zsi.png')
-          this.feedBackData['colorCode'] = 'ASD12365478'
-          this.feedBackData['price'] = '5.00/米'
-          this.feedBackData['samplePrice'] = '10.00/米'
-          this.feedBackData['acceptDate'] = '2019.3.22 20:26'
-          this.feedBackData['sendSatus'] = SENDSTATUS[0]
-          this.feedBackData['express'] = {'name': '顺丰物流', 'trackingNO': '123456789876'}
+          // item.receiptList[0]?item.receiptList[0].colorCardCode||'':''
+          this.feedBackData['img'] = res.data.list[0] ? res.data.list[0].imgUrlListValue[0] : require('../../assets/zsi.png')
+          this.feedBackData['colorCode'] = res.data.list[0] ? res.data.list[0].colorCardCode : 'ASD12365478'
+          this.feedBackData['price'] = String(res.data.list[0].unitPrice) + '/米'
+          this.feedBackData['samplePrice'] = String(res.data.list[0].samplePrice) + '/米'
+          this.feedBackData['acceptDate'] = formatDate(res.data.list[0].createTime)
+          this.feedBackData['sendSatus'] = SENDSTATUS[res.data.list[0].status]
+          console.log('this.feedBackData=>', this.feedBackData)
         }
       })
     },
-    getHttpData (inquiryId) {
-      let url = '/tsebuapi/show.do?'
+    getHttpData (inquiryId) { // 获取需求详细信息
+      let url = API + '/show.do?'
       let formData = {
         'cmd': 'queryInquiryDetail',
         'inquiryId': inquiryId
+      }
+      if (this.inquiryId <= 0) { // Id异常
+        alert('this.inquiryId:' + String(this.inquiryId))
+        return false
       }
       this.axios.post(url, this.qs.stringify(formData), {
         headers: {
@@ -249,7 +274,12 @@ export default {
       })
     },
     back () {
-      this.$router.go(-1)
+      // this.$router.go(-1)
+      console.log('requirement->back=>this.flag', this.flag)
+      if (!this.flag) {
+        this.flag = 'g'
+      }
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': this.flag}})
     },
     go (flag) {
       if (flag === 'accept') {
