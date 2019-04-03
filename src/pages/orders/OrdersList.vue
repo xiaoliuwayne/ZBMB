@@ -7,7 +7,7 @@
     <!--@click-left="back"-->
     <!--class="main-bk header"-->
   <!--/>-->
-  <van-tabs @click="onClick" color="#1aad19">
+  <van-tabs @click="onClick" color="#1aad19" v-model="active">
     <van-tab title="待接单">
       <div class="card" v-for="(item,hh) in showDatasWait" :key="hh" @click="goRequirement('w',item.inquiryId)">
         <div style="width: 20vw"  align="center">
@@ -43,8 +43,8 @@
         </div>
         <div class="dot-line"></div>
         <div class="feedback">
-          <span>色卡编号：{{item.colorCode}}</span>
-          <span>单价：{{item.price}}</span>
+          <span>色卡编号：{{item.receiptList[0]?item.receiptList[0].colorCardCode||'':''}}</span>
+          <span>剪版价：{{item.receiptList[0]?String(item.receiptList[0].unitPrice) + '/元':'/元'}}</span>
           <span>
             <van-button @click="goRequirement('g',item.inquiryId)" class="bt-bright bt-check" >
               查看
@@ -58,10 +58,11 @@
 </template>
 
 <script>
-import {STATUS, formatDate, CLOTHSTYLE} from '../../assets/js/common.js'
+import {STATUS, formatDate, CLOTHSTYLE, BASEURL, API} from '../../assets/js/common.js'
 export default {
   data () {
     return {
+      active: 1,
       index2responsed: {0: 0, 1: 1},
       title: '找布买布',
       page: 0,
@@ -70,20 +71,39 @@ export default {
       providerId: 0,
       inquiryId: 0,
       showDatas: [],
-      showDatasWait: []
+      showDatasWait: [],
+      receiptId: 0
     }
   },
   created () {
     this.providerId = this.$route.params.providerId
     this.inquiryId = this.$route.params.inquiryId
-    this.init()
+    let flag = this.$route.params.flag
+    console.log('orderlist=>create=>let flag', flag)
+    if (flag) {
+      if (flag === 'w') {
+        this.active = 0
+        console.log(200)
+        this.init(0)
+      } else {
+        this.active = 1
+        console.log(300)
+        this.init(1)
+      }
+    } else {
+      this.active = 1
+      console.log(100)
+      this.init(1)
+    }
   },
   methods: {
-    init () {
-      this.getHttpData(0)
+    init (id) { // 已接单需求列表
+      console.log('id:', id)
+      this.getHttpData(id)
     },
-    getHttpData (responsedId) {
-      let url = '/tsebuapi/show.do?'
+    getHttpData (responsedId) { // 逻辑修改！！！
+      // let url = '/tsebuapi/show.do?'
+      let url = API + '/show.do?'
       // this.providerId = 28191
       let param = {
         'sendProviderId': this.providerId,
@@ -95,7 +115,11 @@ export default {
         'page': this.page,
         'pageSize': this.pageSize
       }
-      this.axios.post(url, this.qs.stringify(formData), {
+      if (this.providerId <= 0) { // Id异常
+        alert('this.providerId:' + String(this.providerId))
+        return false
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formData), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }}).then(
@@ -127,7 +151,8 @@ export default {
       response.list.forEach(obj => {
         let tmpCreate = formatDate(obj.createTime)
         let tmpExpire = formatDate(obj.expireTime)
-        if (id === 1) { // (id === 1 暂时改为 0 以测试
+        if (id === 1) {
+          this.receiptId = obj.receiptList[0].receiptId // 需求回单列表中的id,用于查找某一需求回单详情
           this.showDatas.push({
             'inquiryId': obj.inquiryId,
             'imgUrl': obj.imageList[0],
@@ -136,8 +161,9 @@ export default {
             'status': STATUS[1], // 是否接单，obj.status
             'clothType': this.getClothType(obj.keywords), // obj.clothType,
             'desc': obj.desc, // obj.desc
-            'colorCode': obj.colorCardCode, // obj.colorCode
-            'price': String(obj.price) + '/米' // obj.price
+            // 'colorCode': obj.colorCardCode, // obj.colorCode
+            // 'price': String(obj.price) + '/米', // obj.price
+            'receiptList': obj.receiptList
           })
         } else {
           this.showDatasWait.push({
@@ -156,13 +182,14 @@ export default {
     },
     onClick (index, title) {
       console.log('index, title', index, title)
-      this.getHttpData(this.index2responsed[index])
+      this.getHttpData(this.active)
     },
     goRequirement (flag, inquiryId) {
       this.$router.push({name: 'Requirement',
         params: {'flag': flag,
           'providerId': this.providerId,
-          'inquiryId': inquiryId}})
+          'inquiryId': inquiryId,
+          'receiptId': this.receiptId}})
     },
     back () {
       this.$router.go(-1)
