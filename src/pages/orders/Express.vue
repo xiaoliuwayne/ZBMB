@@ -19,6 +19,7 @@
 </template>
 
 <script>
+import {BASEURL, API} from '../../assets/js/common.js'
 export default {
   data () {
     return {
@@ -47,7 +48,7 @@ export default {
   },
   methods: {
     getExpressStatus () {
-      let url = '/tsebuapi/show.do?' // 可以提取做公共部分
+      let url = API + '/show.do?' // 可以提取做公共部分
       let formdata = {
         'cmd': 'queryDeliveryInfo',
         'appName': 3,
@@ -55,7 +56,7 @@ export default {
         'number': this.number,
         'receiverPhone': this.receiverPhone
       }
-      this.axios.post(url, this.qs.stringify(formdata), {headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).then(res => {
         console.log('Express=>res', res)
         if (res.exId) {
