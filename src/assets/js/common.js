@@ -29,6 +29,19 @@ var SPOTSTATUS = {0: '有现货', 1: '无现货'}
 var FEEDBACK_SPOTSTATUS = {'0': '现货', '1': '定制'}
 var CLOTHSTYLE = {1: '针织', 2: '梭织'}
 var SENDSTATUS = {0: '待确认调版', 1: '已确认调版'}
+
+// 生产环境
+// var BASEURL = 'https://www.ebudaowei.cn'
+// var API = '/api'
+
+// ts. 测试环境
+// var BASEURL = 'http://ts.ebdaowei.com' // 测试环境
+// var API = '/ebuapi' // 测试环境
+
+// 本地开发环境
+var BASEURL = ''
+var API = '/tsebuapi' // 开发环境api
+
 // var formatDate = function (timestamp) {
 function formatDate (timestamp) {
   let date = new Date(timestamp)
@@ -42,4 +55,4 @@ function formatDate (timestamp) {
   return newTime
 }
 
-export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE, FEEDBACK_SPOTSTATUS, SENDSTATUS}
+export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE, FEEDBACK_SPOTSTATUS, SENDSTATUS, BASEURL, API}
