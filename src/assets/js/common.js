@@ -31,16 +31,16 @@ var CLOTHSTYLE = {1: '针织', 2: '梭织'}
 var SENDSTATUS = {0: '待确认调版', 1: '已确认调版'}
 
 // 生产环境 http://desk.ebudaowei.cn/ebuapi/show.do?
-var BASEURL = 'http://desk.ebudaowei.cn'
-var API = '/ebuapi'
+// var BASEURL = 'http://desk.ebudaowei.cn'
+// var API = '/ebuapi'
 
 // ts. 测试环境
 // var BASEURL = 'http://ts.ebdaowei.com' // 测试环境//////
 // var API = '/ebuapi' // 测试环境
 
 // 本地开发环境
-// var BASEURL = ''
-// var API = '/tsebuapi' // 开发环境api
+var BASEURL = ''
+var API = '/tsebuapi' // 开发环境api
 
 // var formatDate = function (timestamp) {
 function formatDate (timestamp) {
