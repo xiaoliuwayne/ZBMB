@@ -40,12 +40,19 @@ export default {
     }
   },
   created () {
-    this.code = ''
+    // 防止不小心退出后重输验证码
+    let tmpCode = sessionStorage.getItem('code')
+    if (tmpCode) {
+      this.code = tmpCode
+    } else {
+      this.code = ''
+    }
   },
   methods: {
     sendCode () {
       console.log('index ==this.code,', this.code)
-      localStorage.setItem('code', String(this.code))
+      // localStorage.setItem('code', String(this.code))
+      sessionStorage.setItem('code', String(this.code))
       if (this.code) {
         this.$router.push({name: 'Main', params: {'code': String(this.code)}})
       }
@@ -56,6 +63,7 @@ export default {
 
 <style scoped>
 @import '../assets/css/mycss.css';
+
   .aa{
     display: table;
     /*margin: 22vw 0 0 7.5vw;*/
