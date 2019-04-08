@@ -152,7 +152,7 @@
 </template>
 
 <script>
-import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS, BASEURL, API} from '../../assets/js/common'
+import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS, BASEURL, API, pushHistory} from '../../assets/js/common'
 export default {
   data () {
     return {
@@ -223,6 +223,15 @@ export default {
     }
     // this.postHttpData()
   },
+  mounted () {
+    pushHistory()
+    console.log(87654321)
+    // 监听历史记录点, 添加返回事件监听
+    window.onpopstate = () => {
+      // 输入要返回的上一级路由地址
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+    }
+  },
   watch: {
     sampleStatus (val) {
       console.log('watch==>val', val)
@@ -232,8 +241,6 @@ export default {
         this.flag = true
       }
     }
-  },
-  mounted () {
   },
   methods: {
     goModify () {
@@ -321,7 +328,7 @@ export default {
             // this.description = ''
           } else {
             console.log('customer=>response', response)
-            alert(response.desc + '提交成功！')
+            alert('已提交成功，请等待客户确认并联系您！')
             this.colorCardCode = ''
             this.unitPrice = 0.0
             this.productName = ''
@@ -373,11 +380,11 @@ export default {
         this.imgUrlListValue.push(res.data.urls[0].image)
         console.log('this.imgUrlListValue:', this.imgUrlListValue)
       }).catch(err => {
-        alert(err)
+        alert('gggggg' + err)
       })
     },
     back () {
-      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'g'}})
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
     }
   }
 }
