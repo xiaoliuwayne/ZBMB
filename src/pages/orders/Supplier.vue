@@ -108,17 +108,13 @@
         placeholder=""
         :readonly="true"
       />
-      <!--<p><span class="p-header-small per-info">公司名称：</span>{{comInfo.comName}}</p>-->
-      <!--<p><span><span class="p-header-small per-info">姓名：</span>{{comInfo.name}}</span>-->
-        <!--<span style="margin-left: 20%"><span class="p-header-small per-info">移动电话：</span>{{comInfo.phone}}</span></p>-->
-      <!--<p><span class="p-header-small per-info">收货地址：</span>{{comInfo.addr}}</p>-->
     </div>
   </div>
 </template>
 
 <script>
 // CUSTOMIZE, TYPE, formatDate,
-import {BASEURL, API, SPOTSTATUS} from '../../assets/js/common.js'
+import {BASEURL, API, SPOTSTATUS, pushHistory} from '../../assets/js/common.js'
 export default {
   data () {
     return {
@@ -170,6 +166,15 @@ export default {
     console.log('supplier=>this.providerId', this.providerId)
     console.log('supplier=>this.receiptId', this.receiptId)
     this.getFeedBackDetail()
+  },
+  mounted () {
+    pushHistory()
+    console.log(87654321)
+    // 监听历史记录点, 添加返回事件监听
+    window.onpopstate = () => {
+      // 输入要返回的上一级路由地址
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+    }
   },
   methods: {
     getFeedBackDetail () { // 获取供应商回单信息详情
