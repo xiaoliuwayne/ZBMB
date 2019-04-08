@@ -30,7 +30,6 @@
       placeholder=""
       type="textarea"
       :clearable="true"
-      @clear="showAddrEditor"
     />
     <!--<van-address-edit-->
       <!--:area-list="areaList"-->
@@ -52,20 +51,20 @@
       <!--<input class="addr-input" v-model="district" @click="show"/>-->
       <!--&lt;!&ndash;<input v-model="street" style=""/>&ndash;&gt;-->
     <!--</div>-->
-    <div v-show="flag">
-      <van-area :area-list="areaList" :item-height=25 @confirm="onAddrConfirm" @cancel="shut" :value="addrCode" v-show="showArea"/>
-      <div class="line"></div>
-      <van-cell-group>
-        <van-field
-          v-model="street"
-          type="text"
-          placeholder="街道门牌、楼层房间号等信息"
-          :clearable="true"
-         >
-          <van-button slot="button" size="small" class="bt-big bt-bright" @click="finish">确定</van-button>
-        </van-field>
-      </van-cell-group>
-    </div>
+    <!--<div v-show="flag">-->
+      <!--<van-area :area-list="areaList" :item-height=25 @confirm="onAddrConfirm" @cancel="shut" :value="addrCode" v-show="showArea"/>-->
+      <!--<div class="line"></div>-->
+      <!--<van-cell-group>-->
+        <!--<van-field-->
+          <!--v-model="street"-->
+          <!--type="text"-->
+          <!--placeholder="街道门牌、楼层房间号等信息"-->
+          <!--:clearable="true"-->
+         <!--&gt;-->
+          <!--<van-button slot="button" size="small" class="bt-big bt-bright" @click="finish">确定</van-button>-->
+        <!--</van-field>-->
+      <!--</van-cell-group>-->
+    <!--</div>-->
     <div class="line"></div>
     <div style="margin-top: 15px">
       <p class="p-header">主营业务：</p>
@@ -94,7 +93,7 @@
 
 <script>
 import areaList from '../../assets/js/area'
-import {BASEURL, API} from '../../assets/js/common.js'
+import {BASEURL, API, pushHistory} from '../../assets/js/common.js'
 export default {
   components: {areaList},
   data () {
@@ -137,14 +136,24 @@ export default {
     }
   },
   created () {
-    var _ = require('lodash')
-    this.providerInfo = _.cloneDeep(window.providerInfo) // 深拷贝
+    // var _ = require('lodash')
+    // this.providerInfo = _.cloneDeep(window.providerInfo) // 深拷贝
+    this.providerInfo = window.providerInfo
     this.tmpSaveInput = this.$route.params.tmpSaveInput
     this.inquiryId = this.tmpSaveInput['inquiryId']
     this.providerId = this.tmpSaveInput['providerId']
     this.init()
     console.log('this.providerInfo', this.providerInfo)
     this.setDefault(this.providerInfo)
+  },
+  mounted () {
+    pushHistory()
+    console.log(87654321)
+    // 监听历史记录点, 添加返回事件监听
+    window.onpopstate = () => {
+      // 输入要返回的上一级路由地址
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+    }
   },
   methods: {
     finish () {
@@ -177,12 +186,14 @@ export default {
       let zzObjList = this.getKeyWords(this.zzResult, 1)
       let szObjList = this.getKeyWords(this.szResult, 2)
       let keywords = zzObjList.concat(szObjList)
+      // 修改供应商信息
       window.providerInfo = {
         'providerId': window.providerInfo.providerId,
         'companyName': this.companyName,
         'name': this.name,
         'phone': this.phone,
-        'address': this.province + this.city + this.district + this.street,
+        // 'address': this.province + this.city + this.district + this.street,
+        'address': this.address,
         'keywords': keywords
       }
       let url = API + '/show.do?'
@@ -198,7 +209,7 @@ export default {
         'userId': window.providerInfo.providerId,
         'regTel': this.phone,
         'name': this.companyName, // 公司名
-        'address': this.province + this.city + this.district + this.street,
+        'address': this.address,
         'linkman': this.name,
         'busiKeywords': busiKeywords
       }
@@ -229,34 +240,6 @@ export default {
           this.$router.push({name: 'Customer', params: {'tmpSaveInput': this.tmpSaveInput, 'providerId': this.providerId, 'inquiryId': this.inquiryId}})
         }
       })
-      // [
-      // {'groupId': 2, 'inquiryId': 7, 'keyId': 2007, 'keyword': '牛仔面料'},
-      //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1016, 'keyword': '直贡呢'},
-      //   {'groupId': 2, 'inquiryId': 7, 'keyId': 2006, 'keyword': '平布'},
-      //   {'groupId': 1, 'inquiryId': 7, 'keyId': 1017, 'keyword': '针织毛呢'}
-      // ]
-      // post更新数据库中的供应商信息
-    },
-    splitAddr (addr) {
-      // 拆分地址,目前不适应自治区，特别行政区的划分
-      if (addr) {
-        try {
-          this.province = addr.split('省')[0] + '省'
-          this.city = addr.split('省')[1].split('市')[0] + '市'
-          this.district = addr.split('省')[1].split('市')[1].split('区')[0] + '区'
-          if (!this.district) {
-            this.district = addr.split('省')[1].split('市')[1].split('县')[0] + '县'
-          }
-          this.street = addr.split('区')[1]
-          if (!this.street) {
-            this.street = addr.split('县')[1]
-          }
-          this.setAddrCode()
-        } catch (e) {
-          console.log('e: ', e)
-          // alert('该地址不是"省-市-区/县"格式地址!')
-        }
-      }
     },
     setBaseInfo (data) { // 设置szMajor szList等值
       if (data) {
@@ -290,13 +273,6 @@ export default {
       // 初始化复选框
       this.allMajor = this.getMajor()
     },
-    // getArrdCode () {
-    //   // 获取默认地址的地址code
-    //   console.log(111111)
-    // },
-    // setAddrCode () {
-    //   this.addrCode = '440105'
-    // },
     shut () {
       this.showArea = false
     },
