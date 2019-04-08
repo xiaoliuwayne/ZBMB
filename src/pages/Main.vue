@@ -1,5 +1,5 @@
 <template>
-  <div @touchmove.prevent>
+  <div>
     <h3 class="main-bk">{{ title }}</h3>
     <p>您好！{{provider}}：</p>
     <p>{{companyName}}的{{name}}向您发来了一个面料采购信息！</p>
@@ -86,7 +86,7 @@ export default {
   },
   created () {
     let code = this.$route.params.code
-    code = localStorage.getItem('code')
+    code = sessionStorage.getItem('code')
     console.log('code:', code)
     this.init(code)
   },
@@ -171,6 +171,9 @@ export default {
             this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId}})
           }
         }
+      }).catch(function (error) {
+        console.log('error', error)
+        alert('网络异常，请稍后重试！')
       })
     },
     clickImg (e) {
