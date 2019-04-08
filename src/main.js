@@ -26,6 +26,7 @@ import {
   AddressEdit,
   Cell,
   CellGroup,
+  Card,
   Toast
   // ImagePreview  // 图片预览
 } from 'vant'
@@ -45,6 +46,7 @@ Vue.use(Field)
 Vue.use(AddressEdit)
 Vue.use(Cell).use(CellGroup)
 Vue.use(Toast)
+Vue.use(Card)
 
 Vue.config.productionTip = false
 Vue.prototype.qs = qs
