@@ -121,7 +121,12 @@
         </div>
       </div>
       <div class="express-info" v-if="express.number">
+        <!--<span>物流信息：{{express.company}}|<input id="input" style="border: none;width: 110px" v-model="express.number" ></span>-->
         <span>物流信息：{{express.company}}|{{express.number}}</span>
+        <!--<input type="text" name="" id="iUrl" value="https://github.com/zeroclipboard/zeroclipboard">-->
+        <button class="bt-express" @click="copyNumber" id="copyUrlBtn">
+         复制快递单号
+        </button>
         <!--<button class="bt-express">-->
           <!--<router-link :to="{name: 'Express',params: {'express': this.express}}" class="bt-express">-->
             <!--查看快递状态-->
@@ -133,8 +138,10 @@
 </template>
 
 <script>
-import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS, BASEURL, API} from '../../assets/js/common.js'
+import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS, BASEURL, API, pushHistory} from '../../assets/js/common.js'
+import {handleClipboard} from '../../assets/js/clipboard'
 import BigImg from '../../../src/components/BigImg'
+
 export default {
   components: {'big-img': BigImg},
   data () {
@@ -147,8 +154,6 @@ export default {
       receiptId: 0,
       flag: '',
       address: '',
-      addrBase: 'XX省XX市XX区',
-      addrOther: 'XX街道XX路XX号',
       imageList: [
         require('../../assets/zsi.png'),
         require('../../assets/zsi.png'),
@@ -184,7 +189,7 @@ export default {
     this.flag = this.$route.params.flag
     this.providerId = this.$route.params.providerId
     this.inquiryId = this.$route.params.inquiryId
-    this.receiptId = this.$route.params.receiptId
+    this.receiptId = this.$route.params.receiptId // 来源问题
     console.log('requirement==>this.inquiryId', this.inquiryId)
     // this.inquiryId = 7
     if (this.flag === 'g') { // 已经接单了，可以获取回单信息
@@ -194,7 +199,23 @@ export default {
       this.getHttpData(this.inquiryId)
     }
   },
+  mounted () {
+    pushHistory()
+    console.log(87654321)
+    // 监听历史记录点, 添加返回事件监听
+    window.onpopstate = () => {
+      // 输入要返回的上一级路由地址
+      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': this.flag}})
+    }
+  },
   methods: {
+    copyNumber () {
+      handleClipboard(this.express.number, event, () => {
+        alert('单号已经复制在剪贴版')
+      }, () => {
+        alert('单号复制失败！')
+      })
+    },
     getFeedBackData () { // 获取供应商回单信息
       let url = API + '/show.do?'
       let formdata = {
