@@ -24,6 +24,20 @@
           <p class="card-div-span" style="text-align: center">{{item.status}}</p>
         </div>
       </div>
+      <!--<van-card-->
+        <!--num="2"-->
+        <!--tag="标签"-->
+        <!--price="2.00"-->
+        <!--desc="描述信息"-->
+        <!--title="商品标题"-->
+        <!--thumb=""-->
+        <!--origin-price="10.00"-->
+      <!--&gt;-->
+        <!--<div slot="footer">-->
+          <!--<van-button size="mini">按钮</van-button>-->
+          <!--<van-button size="mini">按钮</van-button>-->
+        <!--</div>-->
+      <!--</van-card>-->
     </van-tab>
     <van-tab title="已接单">
       <div v-for="(item,gg) in showDatas" :key="gg" class="get-order">
@@ -46,7 +60,7 @@
           <span>色卡编号：{{item.receiptList[0]?item.receiptList[0].colorCardCode||'':''}}</span>
           <span>剪版价：{{item.receiptList[0]?String(item.receiptList[0].unitPrice) + '/元':'/元'}}</span>
           <span>
-            <van-button @click="goRequirement('g',item.inquiryId)" class="bt-bright bt-check" >
+            <van-button @click="goRequirement('g',item.inquiryId, item.receiptList[0].receiptId)" class="bt-bright bt-check" >
               查看
             </van-button>
           </span>
@@ -71,8 +85,7 @@ export default {
       providerId: 0,
       inquiryId: 0,
       showDatas: [],
-      showDatasWait: [],
-      receiptId: 0
+      showDatasWait: []
     }
   },
   created () {
@@ -84,16 +97,16 @@ export default {
       if (flag === 'w') {
         this.active = 0
         console.log(200)
-        this.init(0)
+        this.init(this.active)
       } else {
         this.active = 1
         console.log(300)
-        this.init(1)
+        this.init(this.active)
       }
     } else {
-      this.active = 1
+      this.active = 0
       console.log(100)
-      this.init(1)
+      this.init(this.active)
     }
   },
   methods: {
@@ -152,7 +165,6 @@ export default {
         let tmpCreate = formatDate(obj.createTime)
         let tmpExpire = formatDate(obj.expireTime)
         if (id === 1) {
-          this.receiptId = obj.receiptList[0].receiptId // 需求回单列表中的id,用于查找某一需求回单详情
           this.showDatas.push({
             'inquiryId': obj.inquiryId,
             'imgUrl': obj.imageList[0],
@@ -184,12 +196,13 @@ export default {
       console.log('index, title', index, title)
       this.getHttpData(this.active)
     },
-    goRequirement (flag, inquiryId) {
+    goRequirement (flag, inquiryId, receiptId) {
       this.$router.push({name: 'Requirement',
         params: {'flag': flag,
           'providerId': this.providerId,
           'inquiryId': inquiryId,
-          'receiptId': this.receiptId}})
+          'receiptId': receiptId
+        }})
     },
     back () {
       this.$router.go(-1)
