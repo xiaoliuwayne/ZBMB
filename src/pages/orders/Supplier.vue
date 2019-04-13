@@ -7,7 +7,8 @@
       class="main-bk"
     />
     <div class="imgs" >
-      <img v-for="(url,kk) in showData.imgList" :key="kk"  v-lazy="url" alt="布料图片">
+      <img v-for="(url,kk) in  showData.imgList" :key="kk" v-lazy="url" alt="布料图片" @click="clickImg($event)">
+      <big-img v-if="showImg" @clickit="viewImg" :imgSrc="imgSrc"></big-img>
     </div>
     <div class="line"></div>
     <p style="font-weight: bolder;font-size: 18px">回样说明：</p>
@@ -113,43 +114,24 @@
 </template>
 
 <script>
-// CUSTOMIZE, TYPE, formatDate,
+import BigImg from '../../../src/components/BigImg'
 import {BASEURL, API, SPOTSTATUS, pushHistory} from '../../assets/js/common.js'
 export default {
+  components: {BigImg},
   data () {
     return {
-      flag: '',
-      showData: {
-        // 'desc': '',
-        // 'samplePrice': 0.0,
-        // 'inStock': '',
-        // 'price': 0.0,
-        // 'weight': '',
-        // 'width': '',
-        // 'ingredients': '',
-        // 'productName': '',
-        // 'colorCode': '',
-        // 'imgList': []
-      },
-      providerId: 0,
-      inquiryId: 0,
+      showImg: false,
+      imgSrc: '',
+      showData: {},
       receiptId: 0,
-      // imageList: [
-      //   require('../../assets/zsi.png'),
-      //   require('../../assets/zsi.png'),
-      //   require('../../assets/zsi.png'),
-      //   require('../../assets/zsi.png')
-      // ],
       comInfo: {}
     }
   },
   created () {
-    this.comInfo = window.providerInfo
-    this.showData = window.providerFeedBack
-    this.providerId = this.$route.params.providerId
-    this.inquiryId = this.$route.params.inquiryId
-    this.receiptId = this.$route.params.receiptId
-    this.flag = this.$route.params.flag
+    // 供应商信息使用缓存(or使用响应返回的数据/res.data.rawMaterialProvider属性)
+    this.comInfo = JSON.parse(sessionStorage.getItem('providerInfo'))
+    this.receiptId = sessionStorage.getItem('receiptId')
+    // 回单信息
     this.showData = {
       'desc': '',
       'samplePrice': 0.0,
@@ -162,57 +144,43 @@ export default {
       'colorCode': '',
       'imgList': []
     }
-    console.log('supplier=>this.inquiryId', this.inquiryId)
-    console.log('supplier=>this.providerId', this.providerId)
-    console.log('supplier=>this.receiptId', this.receiptId)
     this.getFeedBackDetail()
   },
   mounted () {
     pushHistory()
-    console.log(87654321)
     // 监听历史记录点, 添加返回事件监听
     window.onpopstate = () => {
       // 输入要返回的上一级路由地址
-      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+      this.$router.push({name: 'OrdersList'})
     }
   },
   methods: {
     getFeedBackDetail () { // 获取供应商回单信息详情
+      if (this.receiptId <= 0) { // Id异常不操作
+        this.$notify('this.receiptId:' + String(this.receiptId) + '; 请联系管理员！')
+        return false
+      }
       let url = API + '/show.do?'
       let queryDatas = {
-        // 'userId': this.providerId,
-        // 'page': 0,
-        // 'pageSize': 10,
-        // 'inquiryId': this.inquiryId,
-        // 'status': -1
       }
       let formdata = {
         'cmd': 'queryInquiryReceipt',
         'queryDatas': JSON.stringify(queryDatas),
         'receiptId': this.receiptId
       }
-      if (this.receiptId <= 0) { // Id异常
-        alert('this.receiptId:' + String(this.receiptId))
-        return false
-      }
-      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }}).then(res => {
-        console.log('supplier=>res', res)
-        if (res.exId) {
-          alert(res.desc)
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata)).then(res => {
+        if (res.data.exId) {
+          this.$notify(res.data.exDesc)
         } else {
-          console.log('getFeedBackDetail=>res.data: ', res.data)
-          console.log('supplier=>this.showData:', this.showData)
           this.setShowData(res.data)
         }
       })
     },
     setShowData (data) {
       this.showData['desc'] = data.description
-      this.showData['samplePrice'] = String(data.samplePrice) + '/元'
+      this.showData['samplePrice'] = String(data.samplePrice) + '元/米'
       this.showData['inStock'] = SPOTSTATUS[data.spotStatus]
-      this.showData['price'] = String(data.unitPrice) + '/元'
+      this.showData['price'] = String(data.unitPrice) + '元/米'
       this.showData['weight'] = data.weight
       this.showData['width'] = data.width
       this.showData['ingredients'] = data.ingredients
@@ -221,8 +189,15 @@ export default {
       this.showData['imgList'] = data.imgUrlListValue
     },
     back () {
-      // this.$router.go(-1)
-      this.$router.push({name: 'Requirement', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': this.flag, 'receiptId': this.receiptId}})
+      this.$router.push({name: 'OrdersList'})
+    },
+    clickImg (e) {
+      this.showImg = true
+      this.imgSrc = e.currentTarget.src
+      // this.imgSrc = e.target.dataset.src
+    },
+    viewImg () {
+      this.showImg = false
     }
   }
 }
@@ -230,16 +205,4 @@ export default {
 
 <style scoped>
   @import '../../assets/css/mycss.css';
-  .aaa{
-    display: flex;
-    /*position: fixed;*/
-    /*bottom: 0;*/
-  }
-  .aaa img{
-    width: 60px;
-    height: 60px;
-  }
-  .aaa span{
-    font-size: 12px;
-  }
 </style>
