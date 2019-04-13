@@ -403,7 +403,11 @@ export default {
         this.imgUrlListValue.push(res.data.urls[0].image)
         this.loadingStatus = false
       }).catch(err => {
-        this.$notify(err)
+        this.loadingStatus = false
+        this.postData = []
+        this.imgUrlListValue = []
+        console.log('onRead=>err：', err)
+        this.$notify('网络异常，请重新上传图片！')
       })
     },
     back () {
