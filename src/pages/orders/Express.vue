@@ -34,16 +34,6 @@ export default {
     this.number = express.number
     this.receiverPhone = express.receiverPhone.substring(express.receiverPhone.length - 4) // 截取最后四位
     this.companyType = express.companyType
-    // if (!this.number) {
-    //   this.number = '803264688116'
-    // }
-    // if (!this.receiverPhone) {
-    //   this.receiverPhone = '3318'
-    // }
-    // if (!this.companyType) {
-    //   this.companyType = 'sf'
-    // }
-    // this.getTrackingStatus(num)
     this.getExpressStatus()
   },
   methods: {
@@ -56,18 +46,17 @@ export default {
         'number': this.number,
         'receiverPhone': this.receiverPhone
       }
-      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-      }).then(res => {
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata)).then(res => {
         console.log('Express=>res', res)
-        if (res.exId) {
-          alert(res.desc)
+        if (res.data.exId) {
+          this.$notify(res.data.exDesc)
         } else {
           this.trackingContent = res.data
         }
       })
     },
     back () {
-      this.$router.go(-1)
+      this.$router.push({name: 'OrdersList'})
     }
   }
 }
