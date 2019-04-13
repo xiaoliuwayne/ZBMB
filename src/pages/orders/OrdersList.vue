@@ -1,71 +1,45 @@
 <template>
 <div>
   <h3 class="main-bk">{{ title }}</h3>
-  <!--<van-nav-bar-->
-    <!--title="找布买布"-->
-    <!--left-arrow-->
-    <!--@click-left="back"-->
-    <!--class="main-bk header"-->
-  <!--/>-->
   <van-tabs @click="onClick" color="#1aad19" v-model="active">
     <van-tab title="待接单">
-      <div class="card" v-for="(item,hh) in showDatasWait" :key="hh" @click="goRequirement('w',item.inquiryId)">
-        <div style="width: 20vw"  align="center">
-          <img :src="item.imgUrl" alt="样布图片"/>
+      <van-card v-for="(item,hh) in showDatasWait" :key="hh" @click="goRequirement('w',item)">
+        <div slot="thumb">
+          <img :src="item.imgUrl" alt="样布图片" class="card-img"/>
         </div>
-        <div style="width: 70vw;">
-          <p><span class="card-div-span">{{item.createTime}}</span>
-            <span style="color: red;float: right;" class="card-div-span">{{item.expireTime}}</span>
-          </p>
-          <p class="card-div-p">面料种类：{{item.clothType}}</p>
-          <p class="card-div-p">说明：{{item.desc}}</p>
+        <div slot="title">
+          <span style="padding-right: 0.3rem">{{item.createTime}}</span>
+          <span class="date-span" style="color: red">{{item.expireTime}}</span>
+          <span class="date-span">{{item.status}}</span>
         </div>
-        <div style="width: 14vw;">
-          <p class="card-div-span" style="text-align: center">{{item.status}}</p>
+        <div slot="desc">
+          <div style="margin: 5px 0">面料种类：{{item.clothType}}</div>
+          <div>说明：{{item.desc}}</div>
         </div>
-      </div>
-      <!--<van-card-->
-        <!--num="2"-->
-        <!--tag="标签"-->
-        <!--price="2.00"-->
-        <!--desc="描述信息"-->
-        <!--title="商品标题"-->
-        <!--thumb=""-->
-        <!--origin-price="10.00"-->
-      <!--&gt;-->
-        <!--<div slot="footer">-->
-          <!--<van-button size="mini">按钮</van-button>-->
-          <!--<van-button size="mini">按钮</van-button>-->
-        <!--</div>-->
-      <!--</van-card>-->
+      </van-card>
     </van-tab>
     <van-tab title="已接单">
-      <div v-for="(item,gg) in showDatas" :key="gg" class="get-order">
-        <div class="card" style="margin-bottom: 0" >
-          <div style="width: 20vw"  align="center">
-            <img :src="item.imgUrl" alt="样布图片"/>
-          </div>
-          <div style="width: 70vw;">
-            <p><span class="card-div-span">{{item.createTime}}</span>
-            </p>
-            <p class="card-div-p">面料种类：{{item.clothType}}</p>
-            <p class="card-div-p">说明：{{item.desc}}</p>
-          </div>
-          <div style="width: 14vw;">
-            <p class="card-div-span" style="text-align: center">{{item.status}}</p>
-          </div>
+      <van-card v-for="(item,gg) in showDatas" :key="gg">
+        <div slot="thumb">
+          <img :src="item.imgUrl" alt="样布图片" style="" class="card-img"/>
         </div>
-        <div class="dot-line"></div>
-        <div class="feedback">
-          <span>色卡编号：{{item.receiptList[0]?item.receiptList[0].colorCardCode||'':''}}</span>
-          <span>剪版价：{{item.receiptList[0]?String(item.receiptList[0].unitPrice) + '/元':'/元'}}</span>
-          <span>
-            <van-button @click="goRequirement('g',item.inquiryId, item.receiptList[0].receiptId)" class="bt-bright bt-check" >
-              查看
-            </van-button>
-          </span>
+        <div slot="title">
+          <span style="padding-right: 0.3rem">{{item.createTime}}</span>
+          <span class="date-span" style="color: red">{{item.expireTime}}</span>
+          <span class="date-span">{{item.status}}</span>
         </div>
-      </div>
+        <div slot="desc">
+          <div style="margin: 5px 0">面料种类：{{item.clothType}}</div>
+          <div>说明：{{item.desc}}</div>
+        </div>
+        <div slot="footer">
+          <span class="card-footer">色卡编号：{{item.colorCode}}</span>
+          <span class="card-footer">剪版价：{{item.price}}</span>
+          <van-button @click="goRequirement('g',item)" class="bt-bright bt-check" >
+            查看
+          </van-button>
+        </div>
+      </van-card>
     </van-tab>
   </van-tabs>
 </div>
@@ -76,12 +50,10 @@ import {STATUS, formatDate, CLOTHSTYLE, BASEURL, API} from '../../assets/js/comm
 export default {
   data () {
     return {
-      active: 1,
-      index2responsed: {0: 0, 1: 1},
+      active: 0, // van-tabs的v-model值是index
       title: '找布买布',
       page: 0,
-      pageSize: 20, // 一页20条
-      // responsed: 1,
+      pageSize: 50, // 一页20条
       providerId: 0,
       inquiryId: 0,
       showDatas: [],
@@ -89,35 +61,24 @@ export default {
     }
   },
   created () {
-    this.providerId = this.$route.params.providerId
-    this.inquiryId = this.$route.params.inquiryId
-    let flag = this.$route.params.flag
-    console.log('orderlist=>create=>let flag', flag)
-    if (flag) {
-      if (flag === 'w') {
-        this.active = 0
-        console.log(200)
-        this.init(this.active)
-      } else {
-        this.active = 1
-        console.log(300)
-        this.init(this.active)
-      }
-    } else {
+    this.providerId = sessionStorage.getItem('providerId')
+    this.inquiryId = sessionStorage.getItem('inquiryId') // 该id会不断更新，最初从Mian.vue中获得
+    let flag = sessionStorage.getItem('flag')
+    if (flag === 'w') {
       this.active = 0
-      console.log(100)
-      this.init(this.active)
+      this.getHttpData(this.active)
+    } else { // flag === 'g'
+      this.active = 1
+      this.getHttpData(this.active)
     }
   },
   methods: {
-    init (id) { // 已接单需求列表
-      console.log('id:', id)
-      this.getHttpData(id)
-    },
-    getHttpData (responsedId) { // 逻辑修改！！！
-      // let url = '/tsebuapi/show.do?'
+    getHttpData (responsedId) {
+      if (this.providerId <= 0) { // Id异常
+        this.$notify('this.providerId:' + String(this.providerId))
+        return false
+      }
       let url = API + '/show.do?'
-      // this.providerId = 28191
       let param = {
         'sendProviderId': this.providerId,
         'responsed': responsedId
@@ -128,22 +89,12 @@ export default {
         'page': this.page,
         'pageSize': this.pageSize
       }
-      if (this.providerId <= 0) { // Id异常
-        alert('this.providerId:' + String(this.providerId))
-        return false
-      }
-      this.axios.post(BASEURL + url, this.qs.stringify(formData), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }}).then(
+      this.axios.post(BASEURL + url, this.qs.stringify(formData)).then(
         res => {
-          console.log('orderlist=>res', res)
           let response = res.data
           if (response.exId) {
-            alert(response.exDesc)
-            // this.back()
+            this.$notify(response.exDesc)
           } else {
-            console.log('orderList=>response', response)
             this.setShowDatas(response, responsedId)
           }
         }
@@ -151,9 +102,9 @@ export default {
         console.log('error', error)
       })
     },
-    getClothType (keyWords) { // 设置面料种类
-      if (keyWords) {
-        let first = CLOTHSTYLE[keyWords[0].groupId]
+    getClothType (keyWords) { // 设置面料种类,一级，二级
+      if (keyWords.length > 0) {
+        let first = CLOTHSTYLE[keyWords[0].groupId] // rror TypeError: Cannot read property 'groupId' of undefined
         let second = keyWords[0].keyword
         return first + '-' + second
       }
@@ -164,28 +115,30 @@ export default {
       response.list.forEach(obj => {
         let tmpCreate = formatDate(obj.createTime)
         let tmpExpire = formatDate(obj.expireTime)
-        if (id === 1) {
+        if (id === 1) { // 构造已接单列表
+          let colorCode = obj.receiptList[0] ? obj.receiptList[0].colorCardCode : ''
+          let price = obj.receiptList[0] ? String(obj.receiptList[0].unitPrice) + '元/米' : '元/米'
           this.showDatas.push({
             'inquiryId': obj.inquiryId,
             'imgUrl': obj.imageList[0],
             'createTime': tmpCreate,
             'expireTime': tmpExpire,
-            'status': STATUS[1], // 是否接单，obj.status
-            'clothType': this.getClothType(obj.keywords), // obj.clothType,
-            'desc': obj.desc, // obj.desc
-            // 'colorCode': obj.colorCardCode, // obj.colorCode
-            // 'price': String(obj.price) + '/米', // obj.price
-            'receiptList': obj.receiptList
+            'status': STATUS[1], // 已接单
+            'clothType': this.getClothType(obj.keywords),
+            'desc': obj.desc,
+            'colorCode': colorCode,
+            'price': price,
+            'receiptList': obj.receiptList // 包含receiptId
           })
-        } else {
+        } else { // 构造未接单列表
           this.showDatasWait.push({
             'inquiryId': obj.inquiryId,
             'imgUrl': obj.imageList[0],
             'createTime': tmpCreate,
             'expireTime': tmpExpire,
-            'status': STATUS[0], // 是否接单，obj.status
-            'clothType': this.getClothType(obj.keywords), // obj.clothType,
-            'desc': obj.desc // obj.desc
+            'status': STATUS[0], // 待接单
+            'clothType': this.getClothType(obj.keywords),
+            'desc': obj.desc
           })
         }
       })
@@ -196,16 +149,22 @@ export default {
       console.log('index, title', index, title)
       this.getHttpData(this.active)
     },
-    goRequirement (flag, inquiryId, receiptId) {
-      this.$router.push({name: 'Requirement',
-        params: {'flag': flag,
-          'providerId': this.providerId,
-          'inquiryId': inquiryId,
-          'receiptId': receiptId
-        }})
+    goRequirement (flag, item) {
+      let inquiryId = item.inquiryId
+      let receiptId = 0
+      if (item.hasOwnProperty('receiptList')) { // 已接单的才有
+        receiptId = item.receiptList[0].receiptId
+      }
+      // 设置id缓存, 依据特定记录更新inquiryId
+      sessionStorage.setItem('inquiryId', inquiryId)
+      // sessionStorage.setItem('oldInquiryId', inquiryId)
+      sessionStorage.setItem('receiptId', receiptId)
+      sessionStorage.setItem('flag', flag)
+      this.$router.push({name: 'Requirement'})
     },
     back () {
-      this.$router.go(-1)
+      console.log('window.history', window.history)
+      this.$router.push({name: 'OrdersList'})
     }
   }
 }
