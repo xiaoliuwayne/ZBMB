@@ -11,7 +11,8 @@ import router from './router'
 axios.defaults.timeout = 5000
 // axios.defaults.baseURL = 'https://ts.ebdaowei.com'// 'https://api.github.com';
 // window.location.host // 动态获取域名
-// axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+// axios.defaults.headers.post['Content-Type'] = 'application/json'
 // 每次请求携带cookies信息
 // axios.defaults.withCredentials = true;
 
