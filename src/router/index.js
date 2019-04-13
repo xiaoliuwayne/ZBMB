@@ -59,6 +59,27 @@ const routes = [
   }
 ]
 
-export default new Router({
+// export default new Router({
+//   // mode: 'history',
+//   routes: routes
+// })
+
+const router = new Router({
   routes: routes
 })
+
+router.beforeEach((to, from, next) => {
+  if (window._hmt) { // 测试
+    if (to.path) {
+      window._hmt.push(['_trackPageview', '/#' + to.fullPath])
+    }
+  }
+  if (window._hmtl) { // 生产
+    if (to.path) {
+      window._hmtl.push(['_trackPageview', '/#' + to.fullPath])
+    }
+  }
+  next()
+})
+
+export default router
