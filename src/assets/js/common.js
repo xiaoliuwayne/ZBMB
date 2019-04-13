@@ -5,23 +5,6 @@
  * @Date: 2019/3/27
  */
 
-// /**
-//  *删除数组指定下标或指定对象
-//  */
-// Array.prototype.remove = function (obj) {
-//   for (var i = 0; i < this.length; i++) {
-//     var temp = this[i]
-//     if (!isNaN(obj)) {
-//       temp = i
-//     }
-//     if (temp === obj) {
-//       for (var j = i; j < this.length; j++) {
-//         this[j] = this[j + 1]
-//       }
-//       this.length = this.length - 1
-//     }
-//   }
-// }
 var CUSTOMIZE = {0: '不接受定制', 1: '接受定制'}
 var TYPE = {1: '色卡', 2: '剪版'}
 var STATUS = {0: '待接单', 1: '已接单'}
@@ -42,7 +25,6 @@ var SENDSTATUS = {0: '待确认调版', 1: '已确认调版'}
 var BASEURL = ''
 var API = '/tsebuapi' // 开发环境api
 
-// var formatDate = function (timestamp) {
 function formatDate (timestamp) {
   let date = new Date(timestamp)
   let year = date.getFullYear()
@@ -50,6 +32,12 @@ function formatDate (timestamp) {
   let day = date.getDate()
   let hour = date.getHours()
   let min = date.getMinutes()
+  if (hour < 10) {
+    hour = '0' + String(hour)
+  }
+  if (min < 10) {
+    min = '0' + String(min)
+  }
   // let sec = date.getSeconds()
   let newTime = year + '/' + month + '/' + day + ' ' + hour + ':' + min
   return newTime
