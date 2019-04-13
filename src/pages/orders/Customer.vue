@@ -9,18 +9,17 @@
     <div :class="postData.length>4?'upload-img-5':'upload-img-1'">
       <p class="p-header">上传需要找的面料照片：</p>
       <p style="font-size: 12px">请上传要找的完整图案、细节图、尺寸参照图、正反面对比等。(最多5张)</p>
-      <!--<van-uploader :after-read="onRead" multiple>-->
-        <!--&lt;!&ndash;<van-icon name="photograph" />&ndash;&gt;-->
-        <!--<img style="width: 60px;height: 60px;" src="../../assets/img/timg2.jpg" ref="clothImg"/>-->
-      <!--</van-uploader>-->
       <div class="posting-uploader">
         <div class="posting-uploader-item" v-for="(item,nn) in postData" :key="nn">
           <img :src="item.content" alt="图片" class="imgPreview">
-          <van-icon name="close" @click="delImg(nn)" class="delte"/>
+          <van-loading  v-show="loadingStatus" style="padding-left: 15px"/>
+          <van-icon name="close" @click="delImg(nn)" class="delte" v-show="!loadingStatus"/>
         </div>
-        <van-uploader :after-read="onRead" :accept="'image/*'" v-show="postData.length<=4">
-          <img src="../../assets/img/timg.jpg" alt="等待传图" class="imgPreview">
+        <van-uploader :after-read="onRead" :accept="'image/*'" v-show="postData.length<=4 || !loadingStatus">
+          <img src="../../assets/img/img1.png" alt="等待传图" class="imgPreview" v-show="!loadingStatus">
+          <!--<van-loading  v-show="loadingStatus"/>-->
         </van-uploader>
+        <van-tag plain type="danger" v-show="loadingStatus" class="imgPreview">在等待图片上传...</van-tag>
       </div>
     </div>
     <div class="line"></div>
@@ -36,7 +35,7 @@
       <van-field
         v-model="unitPrice"
         type="number"
-        label="剪版价/元："
+        label="剪版价："
         placeholder=""
         required
       />
@@ -76,28 +75,19 @@
         <van-radio-group v-model="sampleStatus" style="display: flex">
           <van-radio name="0">免费</van-radio>
           <van-radio name="1">收费</van-radio>
-          <input :disabled="flag" v-model="samplePrice" style="width: 80px;margin: auto 5px" type="number" placeholder="单位：元"/>
+          <input :disabled="mark" v-model="samplePrice" style="width: 80px;margin: auto 5px;height: 25px" type="number" placeholder="单位：元"/>
         </van-radio-group>
       </div>
       <p class="p-header-small">面料说明：</p>
-      <textarea rows="4" cols="25" v-model="description" >
+      <textarea rows="4" cols="25" v-model="description" style="margin-top: 5px" >
       </textarea>
     </div>
     <div class="line"></div>
     <div>
       <p class="p-header">我的联系方式：
-        <!--<van-button class="bt-bright" style="float: right" @click="goModify">-->
-        <!--<button class="bt-bright" style="float: right">-->
-          <!--<router-link :to="{name: 'Modify'}" style="color: white;font-size: 14px;font-weight: normal">-->
-            <!--修改-->
-          <!--</router-link>-->
-        <!--</button>-->
-        <van-button class="bt-bright" style="float: right; color: white; font-size: 14px;height: 25px;line-height: 25px" @click="goModify">
+        <van-button class="bt-bright bt-check" style="float: right" @click="goModify">
           修改
         </van-button>
-        <!--<span style="float: right">-->
-        <!--<router-link :to="{name: 'Modify',query:{'defaultInfo': defaultInfo}}">修改</router-link>-->
-        <!--</span>-->
       </p>
       <van-field
         v-model="providerInfo.companyName"
@@ -127,9 +117,6 @@
         placeholder=""
         :readonly="true"
       />
-      <!--<div><span>供应商名称：</span>{{defaultInfo.comName}}</div>-->
-      <!--<div><span>联系人姓名：</span>{{defaultInfo.name}}<span>移动电话：</span>{{defaultInfo.phone}}</div>-->
-      <!--<div><span>公司地址：</span>{{defaultInfo.addr}}</div>-->
       <div style="margin: 10px 0"><span class="p-header-small major-sty">主营业务：</span>
         <van-field
           v-for="item in providerKeyWords" :key="item.groupId"
@@ -141,10 +128,6 @@
           :autosize="{minHeight:10}"
           :readonly="true"
         />
-      <!--<div v-for="item in providerKeyWords" :key="item.groupId">-->
-        <!--<span v-if="item.groupId==1" class="major-sty">针织：<span v-for="(kword,dd) in item.list" :key="dd" style="">{{kword.keyword}}</span></span>-->
-        <!--<span v-if="item.groupId==2" class="major-sty">梭织：<span v-for="(kword,ff) in item.list" :key="ff">{{kword.keyword}}</span></span>-->
-      <!--</div>-->
       </div>
       <van-button class="bt-bright bt-big" @click="postHttpData" >提交</van-button>
     </div>
@@ -152,10 +135,12 @@
 </template>
 
 <script>
-import {CLOTHSTYLE, FEEDBACK_SPOTSTATUS, BASEURL, API, pushHistory} from '../../assets/js/common'
+import {CLOTHSTYLE, BASEURL, API, pushHistory} from '../../assets/js/common'
 export default {
   data () {
     return {
+      isGo: true,
+      loadingStatus: false,
       tmpSaveInput: {},
       inquiryId: 0,
       providerId: 0,
@@ -169,27 +154,25 @@ export default {
       sampleStatus: '0',
       samplePrice: '',
       description: '',
+      // tmpImgUrlListValue: [],
       imgUrlListValue: [],
       postData: [],
-      imgIndex: ['1', '2', '3', '4', '5'],
-      addrBase: '广东省广州市海珠区',
-      addrOther: '新滘西路117号广州酒家',
       address: '',
       providerInfo: {},
       providerKeyWords: [],
       clothstyle: {},
-      flag: true
+      mark: true
     }
   },
   created () {
     this.clothstyle = CLOTHSTYLE
-    this.providerId = this.$route.params.providerId
-    this.inquiryId = this.$route.params.inquiryId
-    console.log('customer==created==>this.providerId', this.providerId)
-    if (this.$route.params.tmpSaveInput) { // 将保持的记录赋值回去
-      let tmpSaveInput = this.$route.params.tmpSaveInput
-      // this.inquiryId = tmpSaveInput['inquiryId']
-      // this.providerId = tmpSaveInput['userId']
+    this.providerId = sessionStorage.getItem('providerId')
+    this.inquiryId = sessionStorage.getItem('inquiryId')
+    // 判断该inquiryId是否已经接单
+    this.chooseEntrance()
+    // 将保持的记录赋值回去
+    if (sessionStorage.getItem('tmpSaveInput')) {
+      let tmpSaveInput = JSON.parse(sessionStorage.getItem('tmpSaveInput'))
       this.colorCardCode = tmpSaveInput['colorCardCode']
       this.unitPrice = tmpSaveInput['unitPrice']
       this.productName = tmpSaveInput['productName']
@@ -202,11 +185,10 @@ export default {
       this.description = tmpSaveInput['description']
       this.imgUrlListValue = tmpSaveInput['imgUrlListValue']
     }
-    console.log('customer=> this.providerId', this.providerId)
-    console.log('customer=> this.inquiryId', this.inquiryId)
-    this.providerInfo = window.providerInfo
-    let zzKeyWords = ''
-    let szKeyWords = ''
+    this.providerInfo = JSON.parse(sessionStorage.getItem('providerInfo'))
+    // 处理供应商的关键字
+    let zzKeyWords = '' // 针织关键字
+    let szKeyWords = '' // 梭织关键字
     this.providerInfo.keywords.forEach(obj => {
       if (obj.groupId === 1) {
         zzKeyWords = zzKeyWords + obj.keyword + '  '
@@ -221,31 +203,72 @@ export default {
     if (szKeyWords) {
       this.providerKeyWords.push({'groupId': 2, 'keywords': szKeyWords})
     }
-    // this.postHttpData()
   },
   mounted () {
+    // 图片上传超时监控
+    // this.getElevatorList()
+    // setInterval(this.getElevatorList, 15000)
+
     pushHistory()
-    console.log(87654321)
     // 监听历史记录点, 添加返回事件监听
     window.onpopstate = () => {
       // 输入要返回的上一级路由地址
-      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+      this.$router.push({name: 'OrdersList'})
     }
+  },
+  destroyed () {
   },
   watch: {
     sampleStatus (val) {
-      console.log('watch==>val', val)
       if (val === '1') {
-        this.flag = false
+        this.mark = false
       } else {
-        this.flag = true
+        this.mark = true
       }
     }
+    // loadingStatus (val) {
+    //   console.log('loadingStatus=>val', val)
+    //   if (val === true) {
+    //     // 加载提示
+    //   }
+    // }
   },
   methods: {
+    // close () {
+    //   this.$router.push({name: 'OrdersList'}) // replace替换原路由，作用是避免回退死循环
+    // },
+    chooseEntrance () {
+      // 判断是否已经接了该单
+      if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
+        this.$notify('this.providerId:' + String(this.providerId) + '；this.inquiryId:' + String(this.inquiryId))
+        return false
+      }
+      let url = API + '/show.do?'
+      let formdata = {
+        'cmd': 'getInquiryReceiptList',
+        'userId': this.providerId,
+        'page': 0,
+        'pageSize': 10,
+        'inquiryId': this.inquiryId,
+        'status': -1
+      }
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata)).then(res => {
+        if (res.data.exId) {
+          this.$notify(res.data.exDesc)
+        } else {
+          let tmpList = res.data.list
+          if (tmpList.length > 0) {
+            // 已接单，跳到已接单列表
+            this.$router.push({name: 'OrdersList'})
+          }
+        }
+      }).catch(function (error) {
+        console.log('error', error)
+        this.$notify('网络异常，请稍后重试！')
+      })
+    },
     goModify () {
-      this.tmpSaveInput['inquiryId'] = this.inquiryId
-      this.tmpSaveInput['providerId'] = this.providerId
+      // 缓存已经填写的回单信息
       this.tmpSaveInput['colorCardCode'] = this.colorCardCode
       this.tmpSaveInput['unitPrice'] = this.unitPrice
       this.tmpSaveInput['productName'] = this.productName
@@ -256,31 +279,41 @@ export default {
       this.tmpSaveInput['sampleStatus'] = this.sampleStatus
       this.tmpSaveInput['samplePrice'] = this.samplePrice
       this.tmpSaveInput['description'] = this.description
-      this.tmpSaveInput['imgUrlListValue'] = []
-      this.$router.push({name: 'Modify', params: {'tmpSaveInput': this.tmpSaveInput}})
+      this.tmpSaveInput['imgUrlListValue'] = [] // 图片不缓存
+      sessionStorage.setItem('tmpSaveInput', JSON.stringify(this.tmpSaveInput))
+      this.$router.push({name: 'Modify'})
     },
     postHttpData () {
-      // 将数据设置为全局
+      console.log('this.providerId', this.providerId)
+      console.log('this.inquiryId', this.inquiryId)
+      let idOK = ''
+      let imgOK = ''
+      let requiredOK = ''
+      // 判断id是否异常
+      if (this.providerId <= 0 || this.inquiryId <= 0) {
+        this.$notify('this.providerId:' + String(this.providerId) + ',this.inquiryId:' + String(this.inquiryId))
+      } else { idOK = 'ok' }
+      // 判断表单必填数据
       if ((this.colorCardCode === '') || (this.unitPrice === '')) {
-        alert('剪版价或者色卡编号没有填写！')
-        return false
-      }
+        this.$notify('剪版价或者色卡编号没有填写！')
+        // alert('剪版价或者色卡编号没有填写！')
+      } else { requiredOK = 'ok' }
+      console.log('this.imgUrlListValue', this.imgUrlListValue)
+      console.log('this.imgUrlListValue.length', this.imgUrlListValue.length)
+      console.log('this.postData', this.postData)
+      console.log('this.postData.length', this.postData.length)
+      if ((this.imgUrlListValue.length < this.postData.length) || (this.postData.length === 0) || this.loadingStatus) {
+        this.$notify('图片可能未上传完整,请稍后再试！')
+      } else { imgOK = 'ok' }
+      if (!(idOK && imgOK && requiredOK)) {
+        this.isGo = false
+      } else { this.isGo = true }
+      // 图片数组
       let postImgDatas = []
       this.postData.forEach(file => {
         postImgDatas.push(file.content)
       })
-      window.providerFeedBack = {
-        'imgList': postImgDatas,
-        'inStock': FEEDBACK_SPOTSTATUS[this.spotStatus],
-        'productName': this.productName,
-        'desc': this.description,
-        'colorCode': this.colorCardCode,
-        'weight': this.weight,
-        'samplePrice': this.samplePrice,
-        'price': this.unitPrice,
-        'width': this.width,
-        'ingredients': this.ingredients // 成分
-      }
+      // 表单数据
       let url = API + '/show.do?'
       let receipt = {
         'inquiryId': this.inquiryId,
@@ -297,59 +330,43 @@ export default {
         'description': this.description,
         'imgUrlListValue': this.imgUrlListValue
       }
-      if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
-        alert('this.providerId:' + String(this.providerId) + ',this.inquiryId:' + String(this.inquiryId))
-        return false
-      }
       let formData = {
-        // 'cmd': 'insertDemandReceipt',
         'cmd': 'insertInquiryReceipt',
         'receipt': JSON.stringify(receipt)
       }
-      console.log('customer==>BASEURL + url:', BASEURL + url)
-      this.axios.post(BASEURL + url, this.qs.stringify(formData), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        }}).then(
-        res => {
-          console.log('customer=>res', res)
-          let response = res.data
-          if (response.exId) {
-            alert(response.exDesc)
-            // this.colorCardCode = ''
-            // this.unitPrice = 0.0
-            // this.productName = ''
-            // this.ingredients = ''
-            // this.width = ''
-            // this.weight = ''
-            // this.spotStatus = '0'
-            // this.sampleStatus = '0'
-            // this.samplePrice = 0.0
-            // this.description = ''
-          } else {
-            console.log('customer=>response', response)
-            alert('已提交成功，请等待客户确认并联系您！')
-            this.colorCardCode = ''
-            this.unitPrice = 0.0
-            this.productName = ''
-            this.ingredients = ''
-            this.width = ''
-            this.weight = ''
-            this.spotStatus = '0'
-            this.sampleStatus = '0'
-            this.samplePrice = 0.0
-            this.description = ''
-            this.postData = []
-            this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'g'}})
+      console.log('this.isGo', this.isGo)
+      if (this.isGo) {
+        this.axios.post(BASEURL + url, this.qs.stringify(formData)).then(
+          res => {
+            let response = res.data
+            if (response.exId) {
+              this.$notify(response.exDesc)
+            } else {
+              this.$notify('已提交成功，请等待客户确认并联系您！')
+              // 清空表单数据
+              this.colorCardCode = ''
+              this.unitPrice = 0.0
+              this.productName = ''
+              this.ingredients = ''
+              this.width = ''
+              this.weight = ''
+              this.spotStatus = '0'
+              this.sampleStatus = '0'
+              this.samplePrice = 0.0
+              this.description = ''
+              this.postData = []
+              sessionStorage.setItem('flag', 'g') // 接单后指定到已接单ordersList
+              sessionStorage.removeItem('tmpSaveInput') // 提交后删除缓存
+              this.$router.push({name: 'OrdersList'})
+            }
           }
-        }
-      ).catch(function (error) {
-        console.log('error', error)
-      })
+        ).catch(function (error) {
+          console.log('error', error)
+        })
+      }
     },
     delImg (index) {
-      console.log('delImg->index', index)
-      // 删除指定下标的图片对象
+      // 删除指定下标的图片对象=>页面上显示的
       if (isNaN(index) || index >= this.postData.length) {
         return false
       }
@@ -360,31 +377,38 @@ export default {
         }
       }
       this.postData = tmp
+      // 删除指定下标的图片对象url=>传至后端的url数组
+      let tmpImgUrlValues = []
+      for (let i = 0, len = this.imgUrlListValue.length; i < len; i++) {
+        if (this.imgUrlListValue[i] !== this.imgUrlListValue[index]) {
+          tmpImgUrlValues.push(this.imgUrlListValue[i])
+        }
+      }
+      this.imgUrlListValue = tmpImgUrlValues
     },
-    onRead (file) {
+    startLoading () {
+      this.loadingStatus = true
+    },
+    onRead (file) { // 上传图片到图片服务器
       // this.$refs.clothImg.src = file.content
-      // alert('图片上传成功！')
-      console.log('file.content: ', file.content)
       this.postData.push(file)
-      console.log('this.postData', this.postData)
-      // 上传图片到后台
       let url = API + '/upload?type=99'
       let fd = new FormData()
       fd.append('upImgs', file.file)
-      console.log('fd:', fd)
-      console.log('ddddd', fd.get('upImgs'))
+      this.loadingStatus = true
       this.axios.post(url, fd, {headers: {
         'Content-Type': 'multipart/form-data'
       }}).then(res => {
-        console.log('onRead=>res', res)
+        console.log('onRead=>', res.data)
         this.imgUrlListValue.push(res.data.urls[0].image)
-        console.log('this.imgUrlListValue:', this.imgUrlListValue)
+        this.loadingStatus = false
       }).catch(err => {
-        alert('gggggg' + err)
+        this.$notify(err)
       })
     },
     back () {
-      this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId, 'flag': 'w'}})
+      // this.$router.push({name: 'OrdersList', params: {'inquiryId': this.inquiryId, 'flag': 'w'}})
+      this.$router.push({name: 'OrdersList'})
     }
   }
 }
@@ -392,33 +416,4 @@ export default {
 
 <style scoped>
   @import '../../assets/css/mycss.css';
-  .posting-uploader{
-    margin: 5px 0 15px 0;
-}
-  .posting-uploader-item {
-    float: left;
-    width: 60px;
-    height: 80px;
-    margin: 0 6px;
-  }
-  .imgPreview{
-    width: 60px;
-    height: 60px;
-    margin-left: 6px;
-  }
-  .ver-mid{
-    line-height: 40px;
-  }
-  .radio-sty{
-    display: flex;
-    font-size: 14px
-  }
-  .major-sty{
-    margin-left: 15px;
-    font-size: 14px;
-  }
-  .major-sty span{
-    margin-left: 5px;
-    color: #969799;
-  }
 </style>
