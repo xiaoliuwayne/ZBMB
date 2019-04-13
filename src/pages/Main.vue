@@ -46,15 +46,9 @@
         :autosize="{minHeight: 70}"
         :readonly="true"
       />
-      <!--<p>类型：{{type}}</p>-->
-      <!--<p>有效期至：{{expireTime}}</p>-->
-      <!--<p>{{customization}}</p>-->
-      <!--<p style="font-weight: bolder;margin: 0 15px">面料说明：</p>-->
-      <!--<p style="margin: 5px 15px">{{desc}}</p>-->
     </div>
     <div class="line"></div>
     <h4 >请进入“找布买布”，接这一单</h4>
-    <!--<van-button type="info" @click="goOrders" style="width:30%;margin: 0 35%;background: #4b8feb;border-radius: 5px;color: white ">-->
       <van-button @click="accept" style="" class="bt-bright bt-accept">
         接单
      </van-button>
@@ -63,7 +57,6 @@
 
 <script>
 import BigImg from '../../src/components/BigImg'
-// import {CUSTOMIZE, TYPE, formatDate} from '../../static/js/common.js'
 import {CUSTOMIZE, TYPE, formatDate, BASEURL, API} from '../assets/js/common.js'
 export default {
   components: {'big-img': BigImg, CUSTOMIZE, TYPE, formatDate},
@@ -85,22 +78,18 @@ export default {
     }
   },
   created () {
-    let code = this.$route.params.code
-    code = sessionStorage.getItem('code')
-    console.log('code:', code)
+    let code = sessionStorage.getItem('code')
     this.init(code)
   },
   methods: {
     init (code) {
       let url = API + '/show.do?cmd=querySendInfoByCode&code=' + String(code)
       this.axios.get(BASEURL + url).then(res => {
-        console.log('main==>res', res)
         let response = res.data
         if (response.exId) {
-          alert(response.exDesc)
+          this.$notify(response.exDesc)
           this.$router.push('/')
         } else {
-          console.log('main==>response', response)
           this.provider = response.provider.name
           this.companyName = response.inquiry.companyName
           this.name = response.inquiry.name
@@ -114,19 +103,14 @@ export default {
           this.providerId = response.userId
           this.inquiryId = response.inquiryId
           let imgList = response.inquiry.imageList
-          if (imgList.length === 0) {
-            this.imageList = [
-              require('../assets/zsi.png'),
-              require('../assets/zsi1.jpg'),
-              require('../assets/zsi1.jpg'),
-              require('../assets/zsi1.jpg'),
-              require('../assets/zsi1.jpg')
-            ]
-          } else {
-            this.imageList = imgList
-          }
-          // 供应商的基本信息
-          window.providerInfo = {
+          this.imageList = imgList
+          // 减少路由传参，使用sessionStorage
+          sessionStorage.setItem('providerId', this.providerId)
+          sessionStorage.setItem('inquiryId', this.inquiryId)
+          // sessionStorage.setItem('oldInquiryId', this.inquiryId)
+          sessionStorage.setItem('flag', 'w')
+          // 存储供应商的基本信息
+          let providerInfo = {
             'providerId': response.userId,
             'companyName': response.provider.name,
             'name': response.provider.linkman,
@@ -134,16 +118,20 @@ export default {
             'address': response.provider.address,
             'keywords': response.provider.busiKeywords
           }
-          console.log('main=>window.providerInfo', window.providerInfo)
-          this.getAcceptStatus()
+          sessionStorage.setItem('providerInfo', JSON.stringify(providerInfo))
+          this.chooseEntrance()
         }
       })
     },
     accept () {
-      this.$router.push({name: 'Customer', params: {'providerId': this.providerId, 'inquiryId': this.inquiryId}})
+      this.$router.replace({name: 'Customer'})
     },
-    getAcceptStatus () {
+    chooseEntrance () {
       // 判断是否已经接了该单
+      if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
+        this.$notify('this.providerId:' + String(this.providerId) + '；this.inquiryId:' + String(this.inquiryId))
+        return false
+      }
       let url = API + '/show.do?'
       let formdata = {
         'cmd': 'getInquiryReceiptList',
@@ -153,36 +141,26 @@ export default {
         'inquiryId': this.inquiryId,
         'status': -1
       }
-      if (this.providerId <= 0) { // Id异常
-        alert('this.providerId:' + String(this.providerId))
-        return false
-      }
-      this.axios.post(BASEURL + url, this.qs.stringify(formdata), {headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }}).then(res => {
-        console.log('main=>getAcceptStatus=>res', res)
-        if (res.exId) {
-          alert(res.desc)
+      this.axios.post(BASEURL + url, this.qs.stringify(formdata)).then(res => {
+        if (res.data.exId) {
+          this.$notify(res.data.exDesc)
         } else {
-          console.log('main=>getAcceptStatus=>res.data: ', res.data)
           let tmpList = res.data.list
           if (tmpList.length > 0) {
             // 已接单，跳到已接单列表
-            this.$router.push({name: 'OrdersList', params: {'providerId': this.providerId}})
+            this.$router.push({name: 'OrdersList'})
           }
         }
       }).catch(function (error) {
         console.log('error', error)
-        alert('网络异常，请稍后重试！')
+        this.$notify('网络异常，请稍后重试！')
       })
     },
     clickImg (e) {
       this.showImg = true
       // 获取当前图片地址
-      console.log('clickImg=>e', e)
       this.imgSrc = e.currentTarget.src
       // this.imgSrc = e.target.dataset.src
-      console.log('this.imgSrc: ', this.imgSrc)
     },
     viewImg () {
       this.showImg = false
