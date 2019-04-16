@@ -38,7 +38,7 @@ export default {
     }
   },
   created () {
-    setSpot('在提取码输入页：index', 'index=>I am counting!')
+    // setSpot('在提取码输入页：index', 'index=>I am counting!')
     // 防止不小心退出后要重输验证码
     let tmpCode = sessionStorage.getItem('code')
     if (tmpCode) {
