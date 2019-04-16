@@ -8,7 +8,7 @@ import * as types from './store/types'
 import router from './router'
 
 // axios 配置
-axios.defaults.timeout = 60000
+axios.defaults.timeout = 15000
 // axios.defaults.baseURL = 'https://ts.ebdaowei.com'// 'https://api.github.com';
 // window.location.host // 动态获取域名
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
