@@ -14,16 +14,16 @@ var CLOTHSTYLE = {1: '针织', 2: '梭织'}
 var SENDSTATUS = {0: '待确认调版', 1: '已确认调版'}
 
 // 生产环境 http://desk.ebudaowei.cn/ebuapi/show.do?
-// var BASEURL = 'http://desk.ebudaowei.cn'
-// var API = '/ebuapi'
+var BASEURL = 'http://desk.ebudaowei.cn'
+var API = '/ebuapi'
 
 // ts. 测试环境
 // var BASEURL = 'http://ts.ebdaowei.com' // 测试环境//////
 // var API = '/ebuapi' // 测试环境
 
 // 本地开发环境
-var BASEURL = ''
-var API = '/tsebuapi' // 开发环境api
+// var BASEURL = ''
+// var API = '/tsebuapi' // 开发环境api
 
 function formatDate (timestamp) {
   let date = new Date(timestamp)
@@ -43,6 +43,18 @@ function formatDate (timestamp) {
   return newTime
 }
 
+// talkingData统计平台埋点
+function setSpot (sendMsg, logMsg) {
+  try {
+    console.log(logMsg)
+    window.TDAPP.onEvent(sendMsg)
+    return true
+  } catch (err) {
+    console.log(logMsg + '=>err', err)
+    return false
+  }
+}
+
 // 存储当前历史记录点,实现控制手机物理返回键的按钮事件
 var pushHistory = function () {
   let state = {
@@ -52,4 +64,4 @@ var pushHistory = function () {
   window.history.pushState(state, state.title, state.url)
 }
 
-export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE, FEEDBACK_SPOTSTATUS, SENDSTATUS, BASEURL, API, pushHistory}
+export {CUSTOMIZE, TYPE, formatDate, STATUS, SPOTSTATUS, CLOTHSTYLE, FEEDBACK_SPOTSTATUS, SENDSTATUS, BASEURL, API, pushHistory, setSpot}
