@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import {STATUS, formatDate, CLOTHSTYLE, BASEURL, API} from '../../assets/js/common.js'
+import {STATUS, formatDate, CLOTHSTYLE, BASEURL, API, setSpot} from '../../assets/js/common.js'
 export default {
   data () {
     return {
@@ -61,6 +61,7 @@ export default {
     }
   },
   created () {
+    setSpot('在需求单列表页：ordersList', 'ordersList=>I am counting!')
     this.providerId = sessionStorage.getItem('providerId')
     this.inquiryId = sessionStorage.getItem('inquiryId') // 该id会不断更新，最初从Mian.vue中获得
     let flag = sessionStorage.getItem('flag')
