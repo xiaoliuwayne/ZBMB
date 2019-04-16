@@ -64,7 +64,7 @@
       />
       <van-field
         v-model="showData.samplePrice"
-        type="number"
+        type="tel"
         label="调样价格："
         placeholder="免费"
         :readonly="true"
@@ -115,7 +115,7 @@
 
 <script>
 import BigImg from '../../../src/components/BigImg'
-import {BASEURL, API, SPOTSTATUS, pushHistory} from '../../assets/js/common.js'
+import {BASEURL, API, SPOTSTATUS, pushHistory, setSpot} from '../../assets/js/common.js'
 export default {
   components: {BigImg},
   data () {
@@ -128,6 +128,7 @@ export default {
     }
   },
   created () {
+    setSpot('在供应商回单信息页：supplier', 'supplier=>I am counting!')
     // 供应商信息使用缓存(or使用响应返回的数据/res.data.rawMaterialProvider属性)
     this.comInfo = JSON.parse(sessionStorage.getItem('providerInfo'))
     this.receiptId = sessionStorage.getItem('receiptId')
