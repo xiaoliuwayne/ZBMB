@@ -127,7 +127,7 @@
 </template>
 
 <script>
-import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS, BASEURL, API, pushHistory} from '../../assets/js/common.js'
+import {formatDate, CUSTOMIZE, TYPE, CLOTHSTYLE, SENDSTATUS, BASEURL, API, pushHistory, setSpot} from '../../assets/js/common.js'
 import {handleClipboard} from '../../assets/js/clipboard'
 import BigImg from '../../../src/components/BigImg'
 
@@ -154,6 +154,7 @@ export default {
     }
   },
   created () {
+    setSpot('在需求单详情页：requirement', 'requirement=>I am counting!')
     this.flag = sessionStorage.getItem('flag')
     this.providerId = sessionStorage.getItem('providerId')
     this.inquiryId = sessionStorage.getItem('inquiryId')
