@@ -57,7 +57,8 @@
 
 <script>
 import BigImg from '../../src/components/BigImg'
-import {CUSTOMIZE, TYPE, formatDate, BASEURL, API} from '../assets/js/common.js'
+import {CUSTOMIZE, TYPE, formatDate, BASEURL, API, setSpot} from '../assets/js/common.js'
+// import {CUSTOMIZE, TYPE, formatDate, BASEURL, API} from '../assets/js/common.js'
 export default {
   components: {'big-img': BigImg, CUSTOMIZE, TYPE, formatDate},
   data () {
@@ -78,6 +79,7 @@ export default {
     }
   },
   created () {
+    setSpot('在新需求单页：main', 'main=>I am counting!')
     let code = sessionStorage.getItem('code')
     this.init(code)
   },
@@ -85,6 +87,7 @@ export default {
     init (code) {
       let url = API + '/show.do?cmd=querySendInfoByCode&code=' + String(code)
       this.axios.get(BASEURL + url).then(res => {
+        console.log('main=>init=>res', res)
         let response = res.data
         if (response.exId) {
           this.$notify(response.exDesc)
@@ -121,6 +124,8 @@ export default {
           sessionStorage.setItem('providerInfo', JSON.stringify(providerInfo))
           this.chooseEntrance()
         }
+      }).catch(err => {
+        alert('网络异常' + err)
       })
     },
     accept () {
