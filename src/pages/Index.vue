@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import {setSpot} from '../assets/js/common'
 export default {
   data () {
     return {
@@ -37,6 +38,7 @@ export default {
     }
   },
   created () {
+    setSpot('在提取码输入页：index', 'index=>I am counting!')
     // 防止不小心退出后要重输验证码
     let tmpCode = sessionStorage.getItem('code')
     if (tmpCode) {
@@ -44,10 +46,22 @@ export default {
     } else {
       this.code = ''
     }
+    this.enterCounting()
   },
   methods: {
+    enterCounting () {
+      setSpot('在提取码输入页：index', 'index=>I am counting!')
+      // try {
+      //   console.log('index=>I am counting!')
+      //   window.TDAPP.onEvent('在提取码输入页：index')
+      //   console.log('index=>I am counting222!')
+      // } catch (err) {
+      //   console.log('index=>enterCounting:err', err)
+      // }
+    },
     sendCode () {
       sessionStorage.setItem('code', String(this.code))
+      this.enterCounting()
       if (this.code) {
         this.$router.push({name: 'Main'})
       }
@@ -58,4 +72,14 @@ export default {
 
 <style scoped>
 @import '../assets/css/mycss.css';
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+/* 火狐 */
+input{
+  -moz-appearance:textfield;
+   }
+
 </style>
