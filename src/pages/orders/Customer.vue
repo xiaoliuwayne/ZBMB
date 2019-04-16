@@ -11,8 +11,9 @@
       <p style="font-size: 12px">请上传要找的完整图案、细节图、尺寸参照图、正反面对比等。(最多5张)</p>
       <div class="posting-uploader">
         <div class="posting-uploader-item" v-for="(item,nn) in postData" :key="nn">
-          <img :src="item.content" alt="图片" class="imgPreview">
-          <van-loading  v-show="loadingStatus" style="padding-left: 15px"/>
+          <img :src="item.content" alt="图片" class="imgPreview" @click="clickImg($event)">
+          <big-img v-if="showImg" @clickit="viewImg" :imgSrc="imgSrc"></big-img>
+          <van-loading  v-show="loadingStatus  && (postData.length-1 === nn)" style="padding-left: 15px"/>
           <van-icon name="close" @click="delImg(nn)" class="delte" v-show="!loadingStatus"/>
         </div>
         <van-uploader :after-read="onRead" :accept="'image/*'" v-show="postData.length<=4 || !loadingStatus">
@@ -135,11 +136,15 @@
 </template>
 
 <script>
-import {CLOTHSTYLE, BASEURL, API, pushHistory} from '../../assets/js/common'
+import {CLOTHSTYLE, BASEURL, API, pushHistory, setSpot} from '../../assets/js/common'
+import BigImg from '../../../src/components/BigImg'
 export default {
+  components: {'big-img': BigImg},
   data () {
     return {
       isGo: true,
+      showImg: false,
+      mgSrc: '',
       loadingStatus: false,
       tmpSaveInput: {},
       inquiryId: 0,
@@ -165,6 +170,7 @@ export default {
     }
   },
   created () {
+    setSpot('在创建回单页：customer', 'customer=>I am counting!')
     this.clothstyle = CLOTHSTYLE
     this.providerId = sessionStorage.getItem('providerId')
     this.inquiryId = sessionStorage.getItem('inquiryId')
@@ -184,6 +190,8 @@ export default {
       this.samplePrice = tmpSaveInput['samplePrice']
       this.description = tmpSaveInput['description']
       this.imgUrlListValue = tmpSaveInput['imgUrlListValue']
+      this.postData = tmpSaveInput['postData']
+      // sessionStorage.removeItem('tmpSaveInput')
     }
     this.providerInfo = JSON.parse(sessionStorage.getItem('providerInfo'))
     // 处理供应商的关键字
@@ -205,10 +213,6 @@ export default {
     }
   },
   mounted () {
-    // 图片上传超时监控
-    // this.getElevatorList()
-    // setInterval(this.getElevatorList, 15000)
-
     pushHistory()
     // 监听历史记录点, 添加返回事件监听
     window.onpopstate = () => {
@@ -226,17 +230,8 @@ export default {
         this.mark = true
       }
     }
-    // loadingStatus (val) {
-    //   console.log('loadingStatus=>val', val)
-    //   if (val === true) {
-    //     // 加载提示
-    //   }
-    // }
   },
   methods: {
-    // close () {
-    //   this.$router.push({name: 'OrdersList'}) // replace替换原路由，作用是避免回退死循环
-    // },
     chooseEntrance () {
       // 判断是否已经接了该单
       if (this.providerId <= 0 || this.inquiryId <= 0) { // Id异常
@@ -279,13 +274,14 @@ export default {
       this.tmpSaveInput['sampleStatus'] = this.sampleStatus
       this.tmpSaveInput['samplePrice'] = this.samplePrice
       this.tmpSaveInput['description'] = this.description
-      this.tmpSaveInput['imgUrlListValue'] = [] // 图片不缓存
+      this.tmpSaveInput['imgUrlListValue'] = this.imgUrlListValue // 显示的图片url
+      this.tmpSaveInput['postData'] = this.postData // 显示的图片内容
       sessionStorage.setItem('tmpSaveInput', JSON.stringify(this.tmpSaveInput))
       this.$router.push({name: 'Modify'})
     },
     postHttpData () {
-      console.log('this.providerId', this.providerId)
-      console.log('this.inquiryId', this.inquiryId)
+      // console.log('this.providerId', this.providerId)
+      // console.log('this.inquiryId', this.inquiryId)
       let idOK = ''
       let imgOK = ''
       let requiredOK = ''
@@ -298,10 +294,7 @@ export default {
         this.$notify('剪版价或者色卡编号没有填写！')
         // alert('剪版价或者色卡编号没有填写！')
       } else { requiredOK = 'ok' }
-      console.log('this.imgUrlListValue', this.imgUrlListValue)
-      console.log('this.imgUrlListValue.length', this.imgUrlListValue.length)
-      console.log('this.postData', this.postData)
-      console.log('this.postData.length', this.postData.length)
+      // console.log('this.imgUrlListValue', this.imgUrlListValue)
       if ((this.imgUrlListValue.length < this.postData.length) || (this.postData.length === 0) || this.loadingStatus) {
         this.$notify('图片可能未上传完整,请稍后再试！')
       } else { imgOK = 'ok' }
@@ -334,7 +327,6 @@ export default {
         'cmd': 'insertInquiryReceipt',
         'receipt': JSON.stringify(receipt)
       }
-      console.log('this.isGo', this.isGo)
       if (this.isGo) {
         this.axios.post(BASEURL + url, this.qs.stringify(formData)).then(
           res => {
@@ -389,6 +381,14 @@ export default {
     startLoading () {
       this.loadingStatus = true
     },
+    clickImg (e) {
+      this.showImg = true
+      // 获取当前图片地址
+      this.imgSrc = e.currentTarget.src
+    },
+    viewImg () {
+      this.showImg = false
+    },
     onRead (file) { // 上传图片到图片服务器
       // this.$refs.clothImg.src = file.content
       this.postData.push(file)
@@ -399,8 +399,10 @@ export default {
       this.axios.post(url, fd, {headers: {
         'Content-Type': 'multipart/form-data'
       }}).then(res => {
-        console.log('onRead=>', res.data)
-        this.imgUrlListValue.push(res.data.urls[0].image)
+        // console.log('onRead=>', res.data)
+        if (res.data.desc === 'success') {
+          this.imgUrlListValue.push(res.data.urls[0].image)
+        }
         this.loadingStatus = false
       }).catch(err => {
         this.loadingStatus = false
