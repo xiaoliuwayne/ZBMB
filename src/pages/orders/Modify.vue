@@ -59,7 +59,7 @@
 
 <script>
 // import areaList from '../../assets/js/area'
-import {BASEURL, API, pushHistory, CLOTHSTYLE} from '../../assets/js/common.js'
+import {BASEURL, API, pushHistory, CLOTHSTYLE, setSpot} from '../../assets/js/common.js'
 export default {
   // components: {areaList},
   data () {
@@ -82,6 +82,7 @@ export default {
     }
   },
   created () {
+    setSpot('在供应商信息修改页：modify', 'modify=>I am counting!')
     this.providerInfo = JSON.parse(sessionStorage.getItem('providerInfo'))
     this.providerId = sessionStorage.getItem('providerId')
     this.init(this.providerInfo)
