@@ -95,7 +95,6 @@ Vue.use(VueLazyload, {
   attempt: 3
 })
 
-
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
